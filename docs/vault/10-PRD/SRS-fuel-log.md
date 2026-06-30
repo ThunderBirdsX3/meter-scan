@@ -48,7 +48,8 @@ related_functions:
 - **Post-conditions**:
   - row persist ใน SQLite (อยู่หลัง restart)
   - ถ้ากรอก odometer → ใช้คำนวณ กม./ลิตร แบบ rolling ในรายงาน (FR-007)
-  - image_uri (ถ้ามี) = path ชั่วคราว ไม่ copy ลง storage (อาจหายภายหลัง)
+  - image_uri (ถ้ามี) = **gallery URI** — รูปถูกบันทึกลงแกลเลอรีของเครื่องตอนถ่าย แล้วเก็บลิงก์ใน row (Clarify 2026-06-30 Q2; ต้องขอ permission บันทึกรูป); แสดง placeholder ถ้าลิงก์หาย
+  - บันทึกขณะมีทริป active (FR-004) → entry auto-tag trip_id เป็นทริปนั้น
 - **Acceptance** (Given/When/Then):
   1. **Given** แอปเปิดครั้งแรกไม่มีข้อมูล, **When** ผู้ใช้กรอก liters=30, price=35, amount=1050, brand=PTT, type=แก๊สโซฮอล์ 95 แล้วบันทึก, **Then** entry ปรากฏใน list และยังอยู่หลังปิด/เปิดแอป
   2. **Given** ฟอร์มเปิดอยู่, **When** ผู้ใช้กรอก liters ติดลบ หรือเว้นทั้ง liters/price/amount, **Then** ระบบบล็อกการบันทึก + แสดง error "กรอกข้อมูลการเติมไม่ครบ"
@@ -97,17 +98,20 @@ related_functions:
 
 - **Priority**: P2
 - **Source user story**: US4
-- **Description**: ระบบต้องให้ผู้ใช้ เพิ่ม/แก้/ลบ ทริป (ชื่อ, รถ optional, วันที่เริ่ม?, หมายเหตุ?) และผูก fuel entry หลายรายการเข้าทริป (1 trip : N entries) การสร้างทริปเป็น optional
-- **Inputs**: trip: name (required), vehicle_id?, start_date?, note?; การผูก = set fuel_entry.trip_id
-- **Outputs**: trip row; entry ที่ผูกแสดงใต้ทริป
-- **Pre-conditions**: name ไม่ว่าง; ถ้าระบุรถในทริป → รถมีอยู่จริง
-- **Post-conditions**: ลบทริป → entry ที่ผูก set trip_id = NULL (ไม่ลบ entry), confirm พร้อมจำนวน entry
+- **Description**: ระบบต้องให้ผู้ใช้ เพิ่ม/แก้/ลบ ทริป (ชื่อ, รถ optional, วันที่เริ่ม?, หมายเหตุ?) และผูก fuel entry หลายรายการเข้าทริป (1 trip : N entries) การสร้างทริปเป็น optional. **Active-trip (Clarify 2026-06-30 Q1)**: ทริปมีสถานะ active/ended — ผู้ใช้ "เริ่มทริป" (active) และ "จบทริป" (ended) ได้; entry ที่บันทึกขณะมีทริป active จะ **auto-tag `trip_id`** เป็นทริปนั้น. มี active ได้ **1 อันทั่วทั้งระบบ** (ไม่ขึ้นกับรถ)
+- **Inputs**: trip: name (required), vehicle_id?, start_date?, note?, start_odometer? (number ≥0), end_odometer? (number ≥0); การผูกด้วยมือ = set fuel_entry.trip_id; เริ่มทริป = set is_active; จบทริป = set ended_at + end_odometer?
+- **Outputs**: trip row (มี is_active, ended_at); entry ที่ผูกแสดงใต้ทริป; trip summary (รวม ฿, รวมลิตร, จำนวนครั้ง, ระยะ = end_odometer−start_odometer ถ้ามี)
+- **Pre-conditions**: name ไม่ว่าง; ถ้าระบุรถในทริป → รถมีอยู่จริง; **เริ่มทริปใหม่ได้เฉพาะเมื่อไม่มีทริป active อยู่** (มี active อยู่ → ต้องจบก่อน)
+- **Post-conditions**: ลบทริป → entry ที่ผูก set trip_id = NULL (ไม่ลบ entry), confirm พร้อมจำนวน entry; จบทริป → is_active=false, ended_at=now (entry เดิมยังผูกอยู่); ขณะ active → entry ใหม่ทุกตัว auto trip_id
 - **Acceptance**:
-  1. **Given** มีทริป "เชียงใหม่", **When** ผูก 3 entries เข้าทริป, **Then** overview รายทริปของ "เชียงใหม่" รวม 3 entries
+  1. **Given** มีทริป "เชียงใหม่", **When** ผูก 3 entries เข้าทริป (ด้วยมือ), **Then** overview รายทริปของ "เชียงใหม่" รวม 3 entries
   2. **Given** ทริปมี entry ผูกอยู่, **When** ลบทริปและยืนยัน, **Then** entries ยังอยู่ แต่ trip = ไม่ระบุ
   3. **Given** ฟอร์มทริประบุรถ A, **When** entry ที่ผูกระบุรถ B, **Then** อนุญาต (ทริปไม่บังคับรถเดียว) แต่ overview รายรถยังนับตามรถของ entry
-- **Error handling**: name ว่าง → block; DB fail → toast
-- **Dependencies**: FR-010, FR-003
+  4. **Given** เริ่มทริป "ขอนแก่น" (active), **When** บันทึก entry ใหม่โดยไม่เลือกทริปเอง, **Then** entry นั้น trip_id = "ขอนแก่น" อัตโนมัติ + แท็บเพิ่มแสดง banner ทริป active
+  5. **Given** มีทริป active อยู่แล้ว, **When** กดเริ่มทริปใหม่, **Then** เตือน "มีทริปที่ยังไม่จบ — จบก่อนเริ่มใหม่" + ไม่สร้างทริปใหม่
+  6. **Given** ทริป active มี start_odometer=10000, **When** จบทริปด้วย end_odometer=10450, **Then** trip summary แสดงระยะ 450 กม.; entry ใหม่หลังจบ **ไม่** auto-tag ทริปนี้
+- **Error handling**: name ว่าง → block (VAL_TRIP); เริ่มซ้อนทริป active → block (TRIP_ACTIVE); DB fail → toast
+- **Dependencies**: FR-010, FR-003, FR-001 (auto-tag ตอนบันทึก)
 
 ---
 
@@ -137,7 +141,7 @@ related_functions:
 - **Inputs**: รูปจากกล้อง/gallery
 - **Outputs**: ค่า amount/liters/price (draft) ในฟอร์ม + ลิงก์รูปกับ entry
 - **Pre-conditions**: โมเดล CRNN โหลดได้ (ดู [[SRS-meter-scan]])
-- **Post-conditions**: ค่าที่ยืนยันถูกบันทึกเหมือน FR-001; image_uri = path ชั่วคราว (ไม่ copy ลง storage — อาจหายภายหลัง, แสดง placeholder ถ้าโหลดไม่ได้)
+- **Post-conditions**: ค่าที่ยืนยันถูกบันทึกเหมือน FR-001; image_uri = **gallery URI** (รูปสแกนบันทึกลงแกลเลอรี แล้วเก็บลิงก์; Clarify 2026-06-30 Q2 — เปลี่ยนจาก temp path; placeholder ถ้าโหลดไม่ได้)
 - **Acceptance**:
   1. **Given** ฟอร์ม entry เปิดอยู่, **When** สแกนรูปมิเตอร์สำเร็จ, **Then** Amount/Liters/Price เด้งเข้าฟอร์มเป็น draft แก้ได้
   2. **Given** สแกนไม่เจอ field (คืน null), **When** กลับมาที่ฟอร์ม, **Then** ฟอร์มว่างให้กรอกเอง + ข้อความ "สแกนไม่สำเร็จ ลองใหม่หรือกรอกเอง"
@@ -169,7 +173,7 @@ related_functions:
 
 - **Priority**: P1
 - **Source user story**: US2
-- **Description**: ระบบต้องสรุปแสดง 3 มุมมอง — ราย trip, ราย เดือน, ราย รถ — แต่ละกลุ่มแสดง: ยอดเงินรวม (฿), ปริมาณรวม (ลิตร), จำนวนครั้งเติม, กม./ลิตร เฉลี่ย
+- **Description**: ระบบต้องสรุปแสดง 3 มุมมอง — ราย trip, ราย เดือน, ราย รถ — แต่ละกลุ่มแสดง: ยอดเงินรวม (฿), ปริมาณรวม (ลิตร), จำนวนครั้งเติม, กม./ลิตร เฉลี่ย. **Presentation (Clarify 2026-06-30 Q4)**: MVP = summary cards (ตัวเลขรวม) + ion-list ย่อยตามกลุ่ม; เลือกมุมมองด้วย ion-segment. **ไม่ใช้ chart library ใน MVP** (รักษา NFR-001/SC-002 ≤1s @1000 entries, bundle เล็ก) — กราฟ bar/line = [DEFERRED to Phase 2, backlog]
 - **Inputs**: มุมมองที่เลือก (trip/month/vehicle), ช่วงข้อมูล
 - **Outputs**: รายการกลุ่ม + ตัวเลขสรุปต่อกลุ่ม
 - **Pre-conditions**: มี fuel entry อย่างน้อย 1 รายการ
@@ -179,6 +183,7 @@ related_functions:
   2. **Given** entries รถ A และ B, **When** ดู overview ราย รถ, **Then** แยกกลุ่ม A/B ถูกต้อง รวมไม่ปน
   3. **Given** entry ไม่ผูกทริป, **When** ดู overview ราย trip, **Then** จัดอยู่กลุ่ม "ไม่ระบุทริป"
   4. **Given** ไม่มีกลุ่มใดมี odometer ≥ 2 จุด, **When** ดู กม./ลิตร เฉลี่ย, **Then** แสดง "—" (rolling, FR-007)
+  5. **Given** มี entries, **When** เปิดแท็บภาพรวม, **Then** เห็น summary cards (฿ รวม/ลิตร/ครั้ง/กม.ต่อลิตร) + ion-list ราย กลุ่ม ตาม ion-segment ที่เลือก — ไม่มีกราฟใน MVP
 - **Error handling**: ไม่มี entry → empty state "ยังไม่มีข้อมูลการเติม"
 - **Dependencies**: FR-010, FR-007
 
@@ -232,7 +237,7 @@ related_functions:
 
 ### NFR-002 — Privacy / Security
 
-- **Threshold**: 0 network call จากแอป (ตรวจ network inspector); ข้อมูลและรูปทั้งหมดอยู่ในเครื่องเท่านั้น; ไม่ขอ permission ที่ไม่จำเป็น (เฉพาะกล้อง/รูปภาพสำหรับสแกน)
+- **Threshold**: 0 network call จากแอป (ตรวจ network inspector); ข้อมูลและรูปทั้งหมดอยู่ในเครื่องเท่านั้น; ไม่ขอ permission ที่ไม่จำเป็น — เฉพาะ กล้อง/อ่านรูปภาพ (สแกน) + บันทึกรูปลงแกลเลอรี (image_uri, FR-001/006: iOS NSPhotoLibraryAddUsageDescription / Android media)
 - **Measurement**: `/ow-secure` pre-flight + manual network capture แบบ airplane-mode run
 - **Linked SC**: SC-004
 
@@ -260,8 +265,8 @@ related_functions:
 ## 5. Data Model
 
 - **Vehicle** (id, name, plate?, default_fuel_type_id?, created_at) — 1:N → FuelEntry, 1:N → Trip
-- **Trip** (id, name, vehicle_id?, start_date?, note?, created_at) — 1:N → FuelEntry
-- **FuelEntry** (id, datetime, vehicle_id?, trip_id?, brand_id?, fuel_type_id?, liters, price_per_liter, amount, odometer_km?, station?, note?, image_uri?, created_at) — N:1 → Vehicle/Trip/Brand/FuelType. liters/price/amount อิสระ (ไม่บังคับ invariant). image_uri = temp path. กม./ลิตร = **derived ระดับกลุ่ม** (ไม่เก็บใน row)
+- **Trip** (id, name, vehicle_id?, start_date?, note?, is_active, ended_at?, start_odometer?, end_odometer?, created_at) — 1:N → FuelEntry. `is_active` = ทริปกำลังดำเนิน (1 active ทั่วระบบ); `ended_at` = เวลาจบ (NULL = ยัง active); start/end_odometer = เลขไมล์เริ่ม/จบ (optional, ใช้คำนวณระยะทริป)
+- **FuelEntry** (id, datetime, vehicle_id?, trip_id?, brand_id?, fuel_type_id?, liters, price_per_liter, amount, odometer_km?, station?, note?, image_uri?, created_at) — N:1 → Vehicle/Trip/Brand/FuelType. liters/price/amount อิสระ (ไม่บังคับ invariant). image_uri = **gallery URI** (รูปบันทึกลงแกลเลอรีเครื่อง แล้วเก็บลิงก์; Clarify 2026-06-30 Q2 — เปลี่ยนจาก temp path; แสดง placeholder ถ้าลิงก์หาย). กม./ลิตร = **derived ระดับกลุ่ม** (ไม่เก็บใน row)
 - **Brand** (id, name, created_at) — **master config, read-only** (ไม่มี user create/edit); 1:N → FuelType
 - **FuelType** (id, brand_id, name, grade?, created_at) — **master config, read-only**; N:1 → Brand
 
@@ -287,6 +292,16 @@ related_functions:
 | exists | ลบ vehicle (FR-003) | deleted | fuel_entry.vehicle_id / trip.vehicle_id → NULL (ไม่ลบ entry) |
 | exists | ลบ trip (FR-004) | deleted | fuel_entry.trip_id → NULL |
 
+### Trip active lifecycle (FR-004, Clarify 2026-06-30 Q1)
+
+| From | Event / Actor | To | Side effects |
+|---|---|---|---|
+| (none) | user เริ่มทริป (ไม่มี active อยู่) | active | trip insert is_active=true, ended_at=NULL, start_odometer? |
+| (none) | user เริ่มทริป (มี active อยู่) | (blocked) | เตือน TRIP_ACTIVE — ไม่สร้าง |
+| active | บันทึก entry (FR-001/006) | active | entry.trip_id = ทริป active อัตโนมัติ |
+| active | user จบทริป | ended | is_active=false, ended_at=now, end_odometer?; entry ที่ผูกไว้คงอยู่ |
+| ended | — | ended | entry ใหม่ไม่ auto-tag ทริปนี้ |
+
 ## 7. Error Catalog
 
 | Code | When | Message (user-facing) | FR |
@@ -294,6 +309,7 @@ related_functions:
 | VAL_ENTRY | liters/price/amount ไม่ครบหรือติดลบ | "กรอกข้อมูลการเติมไม่ครบ" | FR-001 |
 | VAL_VEHICLE | ชื่อรถว่าง | "ใส่ชื่อรถ" | FR-003 |
 | VAL_TRIP | ชื่อทริปว่าง | "ใส่ชื่อทริป" | FR-004 |
+| TRIP_ACTIVE | เริ่มทริปใหม่ขณะมีทริป active | "มีทริปที่ยังไม่จบ — จบก่อนเริ่มใหม่" | FR-004 |
 | WARN_ODO | odometer ≤ ครั้งก่อนของรถเดียวกัน | "เลขไมล์น้อยกว่าครั้งก่อน" | FR-007 |
 | SCAN_FAIL | สแกนคืน null/throw | "สแกนไม่สำเร็จ ลองใหม่หรือกรอกเอง" | FR-006 |
 | DB_WRITE | SQLite write fail | "บันทึกไม่สำเร็จ" | FR-010 |
