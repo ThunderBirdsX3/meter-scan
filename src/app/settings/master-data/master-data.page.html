@@ -1,0 +1,44 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/settings" aria-label="กลับ"></ion-back-button>
+    </ion-buttons>
+    <ion-title>แบรนด์และประเภทน้ำมัน</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="master-data-content">
+
+  <!-- Read-only per FR-005 — no add/edit/delete UI -->
+  <div class="brand-group" *ngFor="let group of brandGroups">
+    <ion-list-header class="section-header">
+      <ion-label>{{ group.brand.name }}</ion-label>
+    </ion-list-header>
+
+    <ion-list lines="inset" class="master-data-list" *ngIf="group.fuelTypes.length > 0">
+      <ion-item *ngFor="let ft of group.fuelTypes">
+        <ion-icon name="flask-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+        <ion-label>{{ ft.name }}</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div class="list-empty" *ngIf="group.fuelTypes.length === 0">
+      <p>ยังไม่มีประเภทน้ำมันสำหรับแบรนด์นี้</p>
+    </div>
+  </div>
+
+  <!-- Fuel types not linked to a brand -->
+  <ng-container *ngIf="ungroupedFuelTypes.length > 0">
+    <ion-list-header class="section-header">
+      <ion-label>ประเภทน้ำมันอื่นๆ</ion-label>
+    </ion-list-header>
+
+    <ion-list lines="inset" class="master-data-list">
+      <ion-item *ngFor="let ft of ungroupedFuelTypes">
+        <ion-icon name="flask-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+        <ion-label>{{ ft.name }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </ng-container>
+
+</ion-content>

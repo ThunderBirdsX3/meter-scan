@@ -1,0 +1,192 @@
+// Stats page — DS Component #8 (Segment) + #9 (Stat Card) tokens
+
+.stats-content {
+  --background: var(--color-surface-sunken);
+}
+
+// ── Segment wrapper (DS Component #8) ────────────────────────────────────
+.segment-wrapper {
+  padding: var(--space-4) var(--space-4) 0;
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.stats-segment {
+  --background: var(--color-surface-sunken);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+
+  ion-segment-button {
+    --color: var(--color-text-muted);
+    --color-checked: var(--color-text-inverse);
+    --background-checked: var(--color-action-primary-default);
+    --indicator-color: transparent;
+    font-weight: var(--weight-regular);
+    min-height: 44px;
+    border-radius: var(--radius-md);
+
+    &.segment-button-checked ion-label {
+      font-weight: var(--weight-semibold);
+      // Not color alone: pill fill + semibold weight (SC 1.4.1)
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-focus);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      // No animated indicator slide
+      --transition: none;
+    }
+  }
+}
+
+// ── Stats body ────────────────────────────────────────────────────────────
+.stats-body {
+  padding: var(--space-4);
+}
+
+// ── Stat grid (DS Component #9) ───────────────────────────────────────────
+.stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.stat-card {
+  --background: var(--color-surface-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  margin: 0;
+
+  &--full {
+    width: 100%;
+    border-left: 4px solid var(--color-accent-reading);
+  }
+
+  &--half {
+    flex: 1;
+    min-width: calc(50% - var(--space-3) / 2);
+  }
+}
+
+.stat-label {
+  font-size: var(--font-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+// Emphasized label uses accent-emphasis (text-safe 5.48:1 light / 9.74:1 dark)
+.accent-label {
+  color: var(--color-accent-emphasis);
+}
+
+.stat-value {
+  font-size: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--numeric-readout);
+  letter-spacing: var(--tracking-readout);
+  color: var(--color-text-default);
+  line-height: var(--leading-tight);
+
+  // V6-class: no-data shown as "—" text, not opacity alone
+  &.no-data {
+    opacity: 0.45;
+  }
+}
+
+.stat-unit {
+  font-size: var(--font-sm);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+  margin-left: var(--space-1);
+}
+
+// ── Breakdown ─────────────────────────────────────────────────────────────
+.breakdown-section {
+  margin-top: var(--space-2);
+}
+
+.breakdown-title {
+  font-size: var(--font-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.breakdown-list {
+  background: transparent;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.breakdown-item {
+  --background: var(--color-surface-raised);
+  --border-radius: var(--radius-lg);
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  .row-name {
+    font-size: var(--font-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-default);
+  }
+
+  .row-meta {
+    font-size: var(--font-xs);
+    color: var(--color-text-muted);
+  }
+
+  .row-amount {
+    font-size: var(--font-md);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: var(--numeric-readout);
+    color: var(--color-text-default);
+  }
+}
+
+.breakdown-empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────
+.stats-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  text-align: center;
+  color: var(--color-text-muted);
+
+  .hero-icon {
+    font-size: 64px;
+    margin-bottom: var(--space-4);
+    color: var(--color-action-primary-default);
+    opacity: 0.6;
+  }
+
+  h2 {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-default);
+    margin: 0 0 var(--space-2);
+  }
+
+  p {
+    font-size: var(--font-base);
+    margin: 0;
+  }
+}

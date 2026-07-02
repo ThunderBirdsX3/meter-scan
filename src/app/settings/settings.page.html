@@ -1,0 +1,80 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>ตั้งค่า</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="settings-content">
+
+  <!-- ── Data management menu ────────────────────────────────────────────── -->
+  <ion-list-header class="section-header">
+    <ion-label>จัดการข้อมูล</ion-label>
+  </ion-list-header>
+
+  <ion-list lines="inset" class="settings-list">
+    <ion-item routerLink="vehicles" button detail="true">
+      <ion-icon name="car-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+      <ion-label>รถของฉัน</ion-label>
+    </ion-item>
+    <ion-item routerLink="trips" button detail="true">
+      <ion-icon name="navigate-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+      <ion-label>ทริป</ion-label>
+    </ion-item>
+    <ion-item routerLink="master-data" button detail="true">
+      <ion-icon name="business-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+      <ion-label>แบรนด์และประเภทน้ำมัน</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <!-- ── Appearance ───────────────────────────────────────────────────────── -->
+  <ion-list-header class="section-header">
+    <ion-label>การแสดงผล</ion-label>
+  </ion-list-header>
+
+  <ion-list lines="inset" class="settings-list">
+    <ion-item>
+      <ion-icon name="moon-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+      <ion-label>โหมดมืด</ion-label>
+      <ion-toggle
+        [checked]="darkMode"
+        (ionChange)="onDarkModeToggle($event)"
+        aria-label="สลับโหมดมืด">
+      </ion-toggle>
+    </ion-item>
+  </ion-list>
+
+  <!-- ── Other / placeholders ───────────────────────────────────────────── -->
+  <ion-list-header class="section-header">
+    <ion-label>ทั่วไป</ion-label>
+  </ion-list-header>
+
+  <ion-list lines="inset" class="settings-list">
+    <!-- Export placeholder (Non-goal) -->
+    <ion-item [disabled]="true" aria-label="ส่งออกข้อมูล (ยังไม่พร้อมใช้งาน)">
+      <ion-icon name="download-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+      <ion-label>
+        ส่งออกข้อมูล
+        <p class="placeholder-note">เร็วๆ นี้</p>
+      </ion-label>
+    </ion-item>
+
+    <!-- Clear data placeholder (Non-goal) -->
+    <ion-item [disabled]="true" aria-label="ล้างข้อมูลทั้งหมด (ยังไม่พร้อมใช้งาน)">
+      <ion-icon name="trash-outline" slot="start" aria-hidden="true" class="item-icon item-icon--danger"></ion-icon>
+      <ion-label>
+        ล้างข้อมูลทั้งหมด
+        <p class="placeholder-note">เร็วๆ นี้</p>
+      </ion-label>
+    </ion-item>
+
+    <!-- About -->
+    <ion-item>
+      <ion-icon name="information-circle-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+      <ion-label>
+        เวอร์ชัน
+        <p>Meter Scan 1.0.0</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+</ion-content>

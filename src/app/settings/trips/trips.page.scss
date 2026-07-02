@@ -1,0 +1,73 @@
+// Trips page — DS tokens only
+
+.trips-content {
+  --background: var(--color-surface-sunken);
+}
+
+.trips-list {
+  margin-bottom: var(--space-2);
+
+  ion-item {
+    --background: var(--color-surface-raised);
+  }
+}
+
+.item-icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-lg);
+}
+
+// ── Inline item actions (non-swipe a11y path for edit/delete — DS #10 rule) ─
+.item-actions {
+  ion-button {
+    --color: var(--color-text-muted);
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .delete-action {
+    --color: var(--color-text-danger);
+  }
+}
+
+// ── Empty list ────────────────────────────────────────────────────────────
+.list-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  background: var(--color-surface-raised);
+  margin: 0 0 var(--space-2);
+}
+
+// ── Modal (DS Component #11) ──────────────────────────────────────────────
+.modal-content {
+  --background: var(--color-surface-sunken);
+}
+
+.modal-form {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.field-item {
+  --background: var(--color-surface-raised);
+  --border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.field-label {
+  font-size: var(--font-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+}
+
+.numeric-input {
+  font-variant-numeric: var(--numeric-readout);
+  letter-spacing: var(--tracking-readout);
+}

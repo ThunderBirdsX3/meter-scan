@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meter Scan — Design System Preview</title>
+<style>
+:root {
+  /* ===== PRIMITIVES — color (v2 teal/emerald retheme) ===== */
+  --color-teal-500:#14b8a6; --color-teal-600:#0d9488; --color-teal-700:#0f766e; --color-teal-800:#115e59;
+  --color-emerald-400:#34d399; --color-emerald-600:#059669; --color-emerald-700:#047857;
+  --color-green-400:#2dd36f; --color-amber-400:#ffc409;
+  --color-red-700:#c5000f; --color-red-100:#fce8e9;
+  --color-neutral-0:#ffffff; --color-neutral-50:#f4f5f8; --color-neutral-100:#e0e0e0;
+  --color-neutral-400:#92949c; --color-neutral-600:#5f5f5f; --color-neutral-700:#545454;
+  --color-neutral-900:#222428; --color-neutral-1000:#000000;
+  /* ===== PRIMITIVES — space ===== */
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+  --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+  --space-16:64px; --space-20:80px; --space-24:96px;
+  /* ===== PRIMITIVES — radius ===== */
+  --radius-sm:6px; --radius-md:8px; --radius-lg:10px; --radius-xl:12px;
+  /* ===== PRIMITIVES — type ===== */
+  --font-2xs:0.7rem; --font-xs:0.78rem; --font-sm:0.85rem; --font-base:0.95rem;
+  --font-md:1rem; --font-lg:1.4rem; --font-display:2rem;
+  --weight-regular:400; --weight-semibold:600; --weight-bold:700;
+  --leading-tight:1.2; --leading-normal:1.5;
+  --tracking-readout:0.06em; --tracking-label:0.12em;
+  --numeric-readout:tabular-nums;
+  /* ===== PRIMITIVES — elevation / motion ===== */
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.08);
+  --duration-fast:150ms; --duration-base:250ms;
+  --easing-standard:cubic-bezier(0.4,0,0.2,1);
+  /* ===== SEMANTIC — light ===== */
+  --color-text-default:var(--color-neutral-900);
+  --color-text-muted:var(--color-neutral-600);
+  --color-text-subtle:var(--color-neutral-700);
+  --color-text-inverse:var(--color-neutral-0);
+  --color-text-danger:var(--color-red-700);
+  --color-text-link:var(--color-teal-700);
+  --color-surface-base:var(--color-neutral-0);
+  --color-surface-raised:var(--color-neutral-0);
+  --color-surface-sunken:var(--color-neutral-50);
+  --color-surface-canvas:var(--color-neutral-1000);
+  --color-surface-danger:var(--color-red-100);
+  --color-action-primary-default:var(--color-teal-700);
+  --color-action-primary-hover:var(--color-teal-800);
+  --color-action-primary-active:var(--color-teal-800);
+  --color-action-primary-disabled:var(--color-neutral-100);
+  --color-action-secondary-default:transparent;
+  --color-action-accent-default:var(--color-emerald-700);
+  --color-border-default:var(--color-neutral-100);
+  --color-border-subtle:var(--color-neutral-50);
+  --color-border-focus:var(--color-teal-700);
+  --color-accent-reading:var(--color-emerald-600);
+  --color-accent-emphasis:var(--color-emerald-700);
+}
+[data-theme="dark"] {
+  --color-text-default:#ffffff; --color-text-muted:#a0a0a0; --color-text-subtle:#8a8a8a;
+  --color-text-inverse:var(--color-neutral-900); --color-text-danger:#ff6b6b;
+  --color-text-link:var(--color-teal-500);
+  --color-surface-base:#121212; --color-surface-raised:#1e1e1e; --color-surface-sunken:#0a0a0a;
+  --color-surface-danger:#3a1416;
+  --color-action-primary-default:var(--color-teal-500);
+  --color-action-primary-hover:var(--color-teal-600);
+  --color-action-primary-active:var(--color-teal-600);
+  --color-action-primary-disabled:#2a2a2a;
+  --color-action-accent-default:var(--color-emerald-400);
+  --color-border-default:#2a2a2a; --color-border-subtle:#1e1e1e;
+  --color-border-focus:var(--color-teal-500);
+  --color-accent-reading:var(--color-emerald-400);
+  --color-accent-emphasis:var(--color-emerald-400);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--color-surface-sunken);
+  color:var(--color-text-default);padding:var(--space-6);line-height:var(--leading-normal)}
+h1{font-size:var(--font-lg)}h2{font-size:var(--font-md);margin-top:var(--space-8);
+  border-bottom:1px solid var(--color-border-default);padding-bottom:var(--space-2)}
+.toggle{position:fixed;top:var(--space-4);right:var(--space-4);padding:var(--space-2) var(--space-4);
+  border-radius:var(--radius-md);border:1px solid var(--color-border-focus);
+  background:var(--color-action-primary-default);color:var(--color-text-inverse);cursor:pointer}
+.swatches{display:flex;flex-wrap:wrap;gap:var(--space-3)}
+.sw{width:120px}.sw .chip{height:48px;border-radius:var(--radius-md);border:1px solid var(--color-border-default)}
+.sw code{font-size:var(--font-2xs);display:block;margin-top:var(--space-1)}
+.rule{height:16px;background:var(--color-action-primary-default);border-radius:var(--radius-sm);margin-bottom:4px}
+/* component renders */
+.card{background:var(--color-surface-raised);border-radius:var(--radius-xl);padding:var(--space-4);
+  box-shadow:var(--shadow-sm);max-width:420px;margin-bottom:var(--space-4)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;
+  padding:0 var(--space-4);border-radius:var(--radius-md);font-size:var(--font-base);
+  font-weight:var(--weight-semibold);cursor:pointer;border:none;
+  transition:background var(--duration-fast) var(--easing-standard)}
+.btn.primary{background:var(--color-action-primary-default);color:var(--color-text-inverse)}
+.btn.primary:hover{background:var(--color-action-primary-hover)}
+.btn.outline{background:transparent;color:var(--color-action-primary-default);
+  border:1px solid var(--color-action-primary-default)}
+.btn.small{min-height:32px;font-size:var(--font-sm)}
+.btn[disabled]{background:var(--color-action-primary-disabled);color:var(--color-text-muted);cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--color-border-focus);outline-offset:2px}
+.canvas{background:var(--color-surface-canvas);border-radius:var(--radius-xl);height:160px;
+  display:flex;align-items:center;justify-content:center;color:var(--color-neutral-400)}
+.field-row{display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) var(--space-4);
+  border-radius:var(--radius-lg);border-left:4px solid var(--color-accent-reading);
+  background:var(--color-surface-raised);box-shadow:var(--shadow-sm);margin-bottom:var(--space-2)}
+.field-row.no-reading{opacity:.45}
+.field-label{font-size:var(--font-2xs);text-transform:uppercase;letter-spacing:var(--tracking-label);
+  color:var(--color-text-muted);font-weight:var(--weight-semibold)}
+.field-value{font-size:var(--font-display);font-weight:var(--weight-bold);
+  font-variant-numeric:var(--numeric-readout);letter-spacing:var(--tracking-readout);color:var(--color-text-default)}
+.error-banner{display:flex;gap:var(--space-2);align-items:center;padding:var(--space-3) var(--space-4);
+  background:var(--color-surface-danger);color:var(--color-text-danger);border-radius:var(--radius-md);font-size:var(--font-sm)}
+.history-item{display:flex;gap:var(--space-3);align-items:center;padding:var(--space-3) 0;
+  border-bottom:1px solid var(--color-border-default)}
+.history-thumb{width:48px;height:48px;border-radius:var(--radius-sm);background:var(--color-neutral-100)}
+.history-reading{font-size:var(--font-sm);font-weight:var(--weight-semibold);font-variant-numeric:var(--numeric-readout)}
+.muted{color:var(--color-text-muted);font-size:var(--font-xs)}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+</head>
+<body>
+<button class="toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">Toggle theme</button>
+<h1>Meter Scan — Design System Preview <span class="muted">tokens_version 2 (teal/emerald retheme) · components_version 1</span></h1>
+
+<h2>Semantic color tokens</h2>
+<div class="swatches">
+  <div class="sw"><div class="chip" style="background:var(--color-text-default)"></div><code>text-default</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-text-muted)"></div><code>text-muted</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-action-primary-default)"></div><code>action-primary (teal)</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-action-primary-hover)"></div><code>action-primary-hover</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-action-accent-default)"></div><code>action-accent (emerald)</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-accent-emphasis)"></div><code>accent-emphasis</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-surface-canvas)"></div><code>surface-canvas</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-surface-danger);border-color:var(--color-text-danger)"></div><code>surface-danger</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-accent-reading)"></div><code>accent-reading (border-only)</code></div>
+  <div class="sw"><div class="chip" style="background:var(--color-border-focus)"></div><code>border-focus</code></div>
+</div>
+
+<h2>Typography scale</h2>
+<div style="font-size:var(--font-display);font-weight:var(--weight-bold)">88.45 <code class="muted">font-display</code></div>
+<div style="font-size:var(--font-lg)">Fuel Meter Scanner <code class="muted">font-lg</code></div>
+<div style="font-size:var(--font-base)">Point camera at the meter <code class="muted">font-base</code></div>
+<div style="font-size:var(--font-2xs);text-transform:uppercase;letter-spacing:var(--tracking-label)">FIELD LABEL <code class="muted">font-2xs</code></div>
+
+<h2>Spacing scale</h2>
+<div class="rule" style="width:var(--space-1)"></div><div class="rule" style="width:var(--space-2)"></div>
+<div class="rule" style="width:var(--space-4)"></div><div class="rule" style="width:var(--space-6)"></div>
+<div class="rule" style="width:var(--space-8)"></div><div class="rule" style="width:var(--space-12)"></div>
+<div class="rule" style="width:var(--space-16)"></div>
+
+<h2>Action Button — variants × states</h2>
+<div class="card">
+  <button class="btn primary">Scan Meter</button>
+  <button class="btn outline">Gallery</button>
+  <button class="btn outline small">Re-scan</button>
+  <button class="btn primary" disabled>Disabled</button>
+  <p class="muted">focus-visible ring uses border-focus (6.1:1). Min target 44×44.</p>
+</div>
+
+<h2>ROI Crop Canvas</h2>
+<div class="card"><div class="canvas">canvas · surface-canvas · drag ROI (crosshair)</div></div>
+
+<h2>Digit Readout / Field Row</h2>
+<div class="card">
+  <div class="field-row"><span class="field-label">Liters</span><span class="field-value">42.18</span></div>
+  <div class="field-row no-reading"><span class="field-label">Price</span><span class="field-value">—</span></div>
+</div>
+
+<h2>Feedback — error banner (DS pale-surface fix, 5.28:1)</h2>
+<div class="card"><div class="error-banner" role="alert">⚠ Couldn't read the number. Re-scan or select manually.</div></div>
+
+<h2>History List Item</h2>
+<div class="card">
+  <div class="history-item"><div class="history-thumb"></div><div>
+    <div class="history-reading">Liters: 42.18</div><div class="muted">30 Jun 14:05</div></div></div>
+</div>
+</body>
+</html>

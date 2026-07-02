@@ -1,2 +1,208 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DS-Tokens v2 — Teal/Emerald retheme (clean-fintech-tracker)
+// Primitive tokens → mapped to Ionic color vars + DS semantic vars
+// DO NOT add raw hex/rgb here — use primitives named below then semantic refs.
+// Light mode = :root; dark mode overrides via dark.system.css (media query in global.scss)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Primitive tokens (raw values) ──────────────────────────────────────────
+:root {
+  // Brand colors (teal/emerald v2)
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+  --color-emerald-400: #34d399;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+
+  // Functional (unchanged from Ionic default)
+  --color-green-400: #2dd36f;
+  --color-amber-400: #ffc409;
+  --color-red-700: #c5000f;
+  --color-red-100: #fce8e9;
+
+  // Neutrals (light mode)
+  --color-neutral-0:    #ffffff;
+  --color-neutral-50:   #f4f5f8;
+  --color-neutral-100:  #e0e0e0;
+  --color-neutral-400:  #92949c;
+  --color-neutral-600:  #5f5f5f;
+  --color-neutral-700:  #545454;
+  --color-neutral-900:  #222428;
+  --color-neutral-1000: #000000;
+
+  // ── Spacing scale (4-base) ────────────────────────────────────────────────
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  // ── Radius ────────────────────────────────────────────────────────────────
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  // ── Typography ────────────────────────────────────────────────────────────
+  --font-2xs:         0.7rem;
+  --font-xs:          0.78rem;
+  --font-sm:          0.85rem;
+  --font-base:        0.95rem;
+  --font-md:          1rem;
+  --font-lg:          1.4rem;
+  --font-display:     2rem;
+  --weight-regular:   400;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+  --leading-tight:    1.2;
+  --leading-normal:   1.5;
+  --tracking-readout: 0.06em;
+  --tracking-label:   0.12em;
+  --numeric-readout:  tabular-nums;
+
+  // ── Elevation ─────────────────────────────────────────────────────────────
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  // ── Motion ────────────────────────────────────────────────────────────────
+  --duration-fast:     150ms;
+  --duration-base:     250ms;
+  --easing-standard:   cubic-bezier(0.4, 0, 0.2, 1);
+
+  // ── Semantic tokens — LIGHT MODE ──────────────────────────────────────────
+
+  // Text
+  --color-text-default: var(--color-neutral-900);
+  --color-text-muted:   var(--color-neutral-600);
+  --color-text-subtle:  var(--color-neutral-700);
+  --color-text-inverse: var(--color-neutral-0);
+  --color-text-danger:  var(--color-red-700);
+  --color-text-link:    var(--color-teal-700);
+
+  // Surface
+  --color-surface-base:    var(--color-neutral-0);
+  --color-surface-raised:  var(--color-neutral-0);
+  --color-surface-sunken:  var(--color-neutral-50);
+  --color-surface-canvas:  var(--color-neutral-1000);
+  --color-surface-danger:  var(--color-red-100);
+
+  // Action — PRIMARY (light: teal-700 on white text)
+  // light #0f766e / dark #14b8a6 — DO NOT collapse (binding contrast constraint)
+  --color-action-primary-default:  var(--color-teal-700);
+  --color-action-primary-hover:    var(--color-teal-800);
+  --color-action-primary-active:   var(--color-teal-800);
+  --color-action-primary-disabled: var(--color-neutral-100);
+  --color-action-secondary-default: transparent;
+  --color-action-accent-default:   var(--color-emerald-700);
+
+  // Border / focus
+  --color-border-default: var(--color-neutral-100);
+  --color-border-subtle:  var(--color-neutral-50);
+  --color-border-focus:   var(--color-teal-700);
+
+  // Accent
+  --color-accent-reading:  var(--color-emerald-600);
+  --color-accent-emphasis: var(--color-emerald-700);
+
+  // Feedback
+  --color-feedback-success: var(--color-green-400);
+  --color-feedback-warning: var(--color-amber-400);
+  // feedback-danger = --color-surface-danger bg + --color-text-danger text (5.28:1)
+
+  // ── Ionic color overrides — wire to DS semantic tokens ───────────────────
+  --ion-color-primary:          var(--color-teal-700);
+  --ion-color-primary-rgb:      15, 118, 110;
+  --ion-color-primary-contrast: var(--color-neutral-0);
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade:    var(--color-teal-800);
+  --ion-color-primary-tint:     var(--color-teal-500);
+
+  --ion-color-success:          var(--color-green-400);
+  --ion-color-success-rgb:      45, 211, 111;
+  --ion-color-success-contrast: var(--color-neutral-1000);
+  --ion-color-success-contrast-rgb: 0, 0, 0;
+  --ion-color-success-shade:    #28ba62;
+  --ion-color-success-tint:     #42d77d;
+
+  --ion-color-warning:          var(--color-amber-400);
+  --ion-color-warning-rgb:      255, 196, 9;
+  --ion-color-warning-contrast: var(--color-neutral-1000);
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade:    #e0ac08;
+  --ion-color-warning-tint:     #ffca22;
+
+  --ion-color-danger:           var(--color-red-700);
+  --ion-color-danger-rgb:       197, 0, 15;
+  --ion-color-danger-contrast:  var(--color-neutral-0);
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade:     #ad000d;
+  --ion-color-danger-tint:      #cb1a28;
+
+  --ion-background-color: var(--color-surface-base);
+  --ion-text-color:        var(--color-text-default);
+  --ion-card-background:   var(--color-surface-raised);
+  --ion-item-background:   var(--color-surface-raised);
+  --ion-toolbar-background: var(--color-surface-raised);
+}
+
+// ── Semantic tokens — DARK MODE ───────────────────────────────────────────
+// Injected via dark.system.css @media prefers-color-scheme:dark
+// We override DS semantic vars; Ionic dark palette handles ion-color-* via dark.system.css
+@media (prefers-color-scheme: dark) {
+  :root {
+    // Text
+    --color-text-default: #ffffff;
+    --color-text-muted:   #a0a0a0;
+    --color-text-subtle:  #8a8a8a;
+    --color-text-inverse: var(--color-neutral-900);   // dark text on lighter bg
+    --color-text-danger:  #ff6b6b;
+    --color-text-link:    var(--color-teal-500);
+
+    // Surface
+    --color-surface-base:   #121212;
+    --color-surface-raised: #1e1e1e;
+    --color-surface-sunken: #0a0a0a;
+    --color-surface-danger: #3a1416;
+
+    // Action — PRIMARY (dark: teal-500 on dark text #222428 = 6.24:1 PASS)
+    --color-action-primary-default:  var(--color-teal-500);
+    --color-action-primary-hover:    var(--color-teal-600);
+    --color-action-primary-active:   var(--color-teal-600);
+    --color-action-primary-disabled: #2a2a2a;
+    --color-action-accent-default:   var(--color-emerald-400);
+
+    // Border / focus (dark)
+    --color-border-default: #2a2a2a;
+    --color-border-subtle:  #1e1e1e;
+    --color-border-focus:   var(--color-teal-500);
+
+    // Accent (dark)
+    --color-accent-reading:  var(--color-emerald-400);
+    --color-accent-emphasis: var(--color-emerald-400);
+
+    // Ionic overrides for dark
+    --ion-color-primary:          var(--color-teal-500);
+    --ion-color-primary-rgb:      20, 184, 166;
+    --ion-color-primary-contrast: var(--color-neutral-900);
+    --ion-color-primary-contrast-rgb: 34, 36, 40;
+    --ion-color-primary-shade:    var(--color-teal-600);
+    --ion-color-primary-tint:     var(--color-teal-400, #2dd4bf);
+
+    --ion-background-color: var(--color-surface-base);
+    --ion-text-color:        var(--color-text-default);
+    --ion-card-background:   var(--color-surface-raised);
+    --ion-item-background:   var(--color-surface-raised);
+    --ion-toolbar-background: var(--color-surface-raised);
+  }
+}

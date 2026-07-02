@@ -1,0 +1,61 @@
+// Tab Bar — DS Component #6
+// Tokens: action-primary-default (active), text-muted (inactive),
+//         accent-emphasis (center emphasis), surface-raised (bar bg),
+//         border-default (top border), weight-semibold (active)
+
+.app-tab-bar {
+  --background: var(--color-surface-raised);
+  border-top: 1px solid var(--color-border-default);
+
+  ion-tab-button {
+    --color: var(--color-text-muted);
+    --color-selected: var(--color-action-primary-default);
+
+    ion-label {
+      font-size: var(--font-2xs);
+      font-weight: var(--weight-regular);
+    }
+
+    &.tab-selected ion-label {
+      font-weight: var(--weight-semibold);
+    }
+
+    // Active state indicator bar (non-color signal — SC 1.4.1)
+    &.tab-selected::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 3px;
+      background: var(--color-action-primary-default);
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    }
+
+    // Reduced motion: no transition on tab switches
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    // Focus ring — DS border-focus token
+    &:focus-visible {
+      outline: 2px solid var(--color-border-focus);
+      outline-offset: -2px;
+    }
+  }
+
+  // Center "เพิ่ม" emphasis — accent-emphasis color, larger icon
+  .tab-emphasized {
+    --color: var(--color-text-muted);
+    --color-selected: var(--color-accent-emphasis);
+
+    ion-icon {
+      font-size: 1.6rem;
+    }
+
+    &.tab-selected::before {
+      background: var(--color-accent-emphasis);
+    }
+  }
+}

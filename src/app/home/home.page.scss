@@ -1,72 +1,120 @@
+// Home page (legacy scan POC — kept intact, DS token drift fixed)
+// V1 fix: error-banner uses --color-surface-danger bg + --color-text-danger (5.28:1)
+// V6 fix: .no-reading — aria-label on element, opacity supplemental
+// V7 fix: prefers-reduced-motion guard on spinner
+
 .processing-overlay {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 24px;
-  gap: 16px;
+  padding: var(--space-16) var(--space-6);  // was 60px 24px → --space-16(64) --space-6(24)
+  gap: var(--space-4);
 
   ion-spinner {
-    width: 48px;
-    height: 48px;
+    width: var(--space-12);  // 48px
+    height: var(--space-12);
   }
 
   .status-text {
-    font-size: 1rem;
-    color: var(--ion-color-medium);
+    font-size: var(--font-md);
+    color: var(--color-text-muted);
     margin: 0;
     text-align: center;
   }
 
+  // V7: prefers-reduced-motion — static fallback
+  @media (prefers-reduced-motion: reduce) {
+    ion-spinner {
+      animation: none;
+    }
+  }
 }
 
 .preview-section {
-  padding: 16px;
+  padding: var(--space-4);
+
+  .auto-scan-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);  // was 10px → --space-3(12)
+    padding: var(--space-2) 0 var(--space-3);  // was 8px 0 10px
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
+  }
 
   .hint {
-    margin: 0 0 10px;
-    font-size: 0.85rem;
-    color: var(--ion-color-medium);
+    margin: 0 0 var(--space-3);  // was 10px
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
     text-align: center;
   }
 
   .crop-canvas {
     width: 100%;
     display: block;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    touch-action: none;          /* let pointer events drive selection */
-    background: #000;
+    border-radius: var(--radius-xl);  // was 12px → --radius-xl
+    margin-bottom: var(--space-3);    // was 12px → --space-3
+    touch-action: none;
+    background: var(--color-surface-canvas);  // was #000
+    cursor: default;
+
+    &.manual-mode {
+      cursor: crosshair;
+    }
+
+    // V3: keyboard focus ring
+    &:focus-visible {
+      outline: 2px solid var(--color-border-focus);
+      outline-offset: 2px;
+    }
   }
 
-  .result-card {
-    margin-top: 16px;
-    padding: 20px 24px;
-    background: var(--ion-color-primary);
-    color: #fff;
-    border-radius: 12px;
-    text-align: center;
+  .rescan-actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin: var(--space-1) 0 var(--space-2);
+  }
 
-    &.no-reading {
-      background: var(--ion-color-medium);
+  .fields-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) var(--space-4);  // was 10px 16px
+      border-radius: var(--radius-lg);  // was 10px
+      border-left: 4px solid var(--color-accent-reading);  // was #2dd36f
+      background: var(--color-surface-raised);  // was var(--ion-card-background, #fff)
+      box-shadow: var(--shadow-sm);  // was rgba(0,0,0,0.08) literal
+
+      // V6 fix: opacity is supplemental; aria-label on element carries state
+      &.no-reading {
+        opacity: 0.45;
+      }
+
+      .field-label {
+        font-size: var(--font-2xs);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--color-text-muted);
+        font-weight: var(--weight-semibold);
+      }
+
+      .field-value {
+        font-size: var(--font-display);
+        font-weight: var(--weight-bold);
+        font-variant-numeric: var(--numeric-readout);
+        letter-spacing: var(--tracking-readout);
+        color: var(--color-text-default);  // was var(--ion-color-dark)
+      }
     }
-
-    .reading-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
-      opacity: 0.75;
-      margin-bottom: 8px;
-    }
-
-    .reading-value {
-      font-size: 3.2rem;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.08em;
-      line-height: 1;
-      margin-bottom: 16px;
-    }
-
   }
 }
 
@@ -75,64 +123,72 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 32px;
+  padding: var(--space-16) var(--space-8);  // was 60px 32px
   text-align: center;
-  color: var(--ion-color-medium);
+  color: var(--color-text-muted);
 
   .hero-icon {
-    font-size: 88px;
-    margin-bottom: 16px;
-    color: var(--ion-color-primary);
+    font-size: 88px;  // large decorative glyph — documented exception
+    margin-bottom: var(--space-4);
+    color: var(--color-action-primary-default);
     opacity: 0.6;
   }
 
   h2 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--ion-color-dark);
-    margin: 0 0 8px;
+    font-size: var(--font-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-default);
+    margin: 0 0 var(--space-2);
   }
 
   p {
-    margin: 0 0 8px;
-    font-size: 0.95rem;
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-base);
   }
 
   .note {
-    font-size: 0.78rem;
-    color: var(--ion-color-medium-shade);
+    font-size: var(--font-xs);
+    color: var(--color-text-muted);
   }
 }
 
+// V1 fix: 1.1:1 fail → 5.28:1 PASS with DS pale-surface pair
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 16px;
-  padding: 12px 16px;
-  background: var(--ion-color-danger-tint);
-  color: var(--ion-color-danger);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  gap: var(--space-2);
+  margin: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-danger);  // was var(--ion-color-danger-tint)
+  color: var(--color-text-danger);          // was var(--ion-color-danger)
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
 
   ion-icon {
-    font-size: 1.2rem;
+    font-size: var(--font-md);
     flex-shrink: 0;
   }
 }
 
 .history-section {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 
   .history-thumb img {
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     object-fit: cover;
   }
 
+  .history-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
   .history-reading {
-    font-size: 1.2rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
+    font-size: var(--font-sm);  // was 0.9rem
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: var(--numeric-readout);
+    color: var(--color-text-default);  // was var(--ion-color-dark)
   }
 }
 
@@ -145,9 +201,9 @@ ion-footer ion-toolbar {
 
 .scan-actions {
   display: flex;
-  gap: 10px;
-  padding: 10px 16px;
-  padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
+  gap: var(--space-3);  // was 10px → --space-3(12)
+  padding: var(--space-3) var(--space-4);  // was 10px 16px
+  padding-bottom: calc(var(--space-3) + var(--ion-safe-area-bottom, 0px));
 
   .gallery-btn {
     flex: 0 0 auto;

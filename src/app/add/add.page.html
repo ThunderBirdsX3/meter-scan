@@ -1,0 +1,391 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>เพิ่มการเติมน้ำมัน</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="add-content">
+
+  <!-- Error banner — DS Component #5: role=alert + correct contrast (V1,V5 fix) -->
+  <div class="error-banner" role="alert" *ngIf="error">
+    <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Scan-assist draft notice (V2 mitigate: result is editable, not auto-saved) -->
+  <div class="scan-draft-notice" role="status" aria-live="polite" *ngIf="scanDraftActive">
+    <ion-icon name="scan-outline" aria-hidden="true"></ion-icon>
+    <span>ข้อมูลจากการสแกน — กรุณาตรวจสอบก่อนบันทึก</span>
+  </div>
+
+  <form #entryForm="ngForm" (ngSubmit)="save(entryForm)" novalidate class="entry-form">
+
+    <!-- ── Date/Time ──────────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item" [class.ion-invalid]="datetimeCtrl.invalid && datetimeCtrl.touched">
+        <ion-label position="stacked" class="field-label">วันที่และเวลา</ion-label>
+        <ion-input
+          name="datetime"
+          type="datetime-local"
+          [(ngModel)]="draft.datetime"
+          #datetimeCtrl="ngModel"
+          required
+          [attr.aria-invalid]="datetimeCtrl.invalid && datetimeCtrl.touched ? 'true' : null"
+          aria-describedby="datetime-err"
+          aria-label="วันที่และเวลาเติมน้ำมัน">
+        </ion-input>
+      </ion-item>
+      <div id="datetime-err" class="field-error" *ngIf="datetimeCtrl.invalid && datetimeCtrl.touched">
+        <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> กรุณาระบุวันที่และเวลา
+      </div>
+    </div>
+
+    <!-- ── Vehicle picker ─────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item">
+        <ion-label position="stacked" class="field-label">รถ</ion-label>
+        <ion-select
+          name="vehicleId"
+          [(ngModel)]="draft.vehicleId"
+          placeholder="เลือกรถ"
+          interface="action-sheet"
+          aria-label="เลือกรถ">
+          <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
+            {{ v.name }} ({{ v.licensePlate }})
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    <!-- ── Trip picker ────────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item">
+        <ion-label position="stacked" class="field-label">ทริป (ถ้ามี)</ion-label>
+        <ion-select
+          name="tripId"
+          [(ngModel)]="draft.tripId"
+          placeholder="เลือกทริป"
+          interface="action-sheet"
+          aria-label="เลือกทริป">
+          <ion-select-option value="">— ไม่ระบุ —</ion-select-option>
+          <ion-select-option *ngFor="let t of trips" [value]="t.id">
+            {{ t.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    <!-- ── Brand + FuelType ───────────────────────────────────────────────── -->
+    <div class="form-row-pair">
+      <div class="form-section form-section--half">
+        <ion-item class="field-item">
+          <ion-label position="stacked" class="field-label">แบรนด์</ion-label>
+          <ion-select
+            name="brandId"
+            [(ngModel)]="draft.brandId"
+            placeholder="เลือก"
+            interface="action-sheet"
+            aria-label="เลือกแบรนด์น้ำมัน">
+            <ion-select-option *ngFor="let b of brands" [value]="b.id">{{ b.name }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+      <div class="form-section form-section--half">
+        <ion-item class="field-item">
+          <ion-label position="stacked" class="field-label">ประเภท</ion-label>
+          <ion-select
+            name="fuelTypeId"
+            [(ngModel)]="draft.fuelTypeId"
+            placeholder="เลือก"
+            interface="action-sheet"
+            aria-label="เลือกประเภทน้ำมัน">
+            <ion-select-option *ngFor="let ft of fuelTypes" [value]="ft.id">{{ ft.name }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+    </div>
+
+    <!-- ── 3 independent numeric fields (FR-001) ─────────────────────────── -->
+    <p class="section-hint">กรอกอย่างน้อย 1 ในสามฟิลด์ด้านล่าง</p>
+
+    <div class="form-row-triple">
+      <!-- Liters -->
+      <div class="form-section form-section--third">
+        <ion-item class="field-item numeric-item"
+                  [class.ion-invalid]="litersCtrl.invalid && litersCtrl.touched">
+          <ion-label position="stacked" class="field-label">ลิตร</ion-label>
+          <ion-input
+            name="liters"
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="draft.liters"
+            #litersCtrl="ngModel"
+            min="0"
+            [attr.aria-invalid]="litersCtrl.invalid && litersCtrl.touched ? 'true' : null"
+            aria-describedby="liters-err"
+            aria-label="จำนวนลิตร"
+            class="numeric-input">
+          </ion-input>
+        </ion-item>
+        <div id="liters-err" class="field-error" *ngIf="litersCtrl.invalid && litersCtrl.touched">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
+        </div>
+      </div>
+
+      <!-- Price/L -->
+      <div class="form-section form-section--third">
+        <ion-item class="field-item numeric-item"
+                  [class.ion-invalid]="priceCtrl.invalid && priceCtrl.touched">
+          <ion-label position="stacked" class="field-label">฿/ลิตร</ion-label>
+          <ion-input
+            name="pricePerLiter"
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="draft.pricePerLiter"
+            #priceCtrl="ngModel"
+            min="0"
+            [attr.aria-invalid]="priceCtrl.invalid && priceCtrl.touched ? 'true' : null"
+            aria-describedby="price-err"
+            aria-label="ราคาต่อลิตร"
+            class="numeric-input">
+          </ion-input>
+        </ion-item>
+        <div id="price-err" class="field-error" *ngIf="priceCtrl.invalid && priceCtrl.touched">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
+        </div>
+      </div>
+
+      <!-- Total amount -->
+      <div class="form-section form-section--third">
+        <ion-item class="field-item numeric-item"
+                  [class.ion-invalid]="amountCtrl.invalid && amountCtrl.touched">
+          <ion-label position="stacked" class="field-label">฿ รวม</ion-label>
+          <ion-input
+            name="totalAmount"
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="draft.totalAmount"
+            #amountCtrl="ngModel"
+            min="0"
+            [attr.aria-invalid]="amountCtrl.invalid && amountCtrl.touched ? 'true' : null"
+            aria-describedby="amount-err"
+            aria-label="ยอดรวมเป็นบาท"
+            class="numeric-input">
+          </ion-input>
+        </ion-item>
+        <div id="amount-err" class="field-error" *ngIf="amountCtrl.invalid && amountCtrl.touched">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Odometer ───────────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item">
+        <ion-label position="stacked" class="field-label">เลขไมล์ (กม.)</ion-label>
+        <ion-input
+          name="odometer"
+          type="number"
+          inputmode="decimal"
+          [(ngModel)]="draft.odometer"
+          min="0"
+          aria-label="เลขไมล์ในหน่วยกิโลเมตร"
+          class="numeric-input">
+        </ion-input>
+      </ion-item>
+    </div>
+
+    <!-- ── Station ────────────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item">
+        <ion-label position="stacked" class="field-label">สถานีบริการ</ion-label>
+        <ion-input
+          name="station"
+          type="text"
+          [(ngModel)]="draft.station"
+          placeholder="ชื่อปั๊ม เช่น PTT วิภาวดี"
+          aria-label="ชื่อสถานีบริการ">
+        </ion-input>
+      </ion-item>
+    </div>
+
+    <!-- ── Note ──────────────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item">
+        <ion-label position="stacked" class="field-label">หมายเหตุ</ion-label>
+        <ion-input
+          name="note"
+          type="text"
+          [(ngModel)]="draft.note"
+          placeholder="เช่น เต็มถัง"
+          aria-label="หมายเหตุเพิ่มเติม">
+        </ion-input>
+      </ion-item>
+    </div>
+
+    <!-- ── Scan-assist entry ──────────────────────────────────────────────── -->
+    <div class="scan-assist-section">
+      <p class="scan-hint">สแกนหน้าจอมิเตอร์เพื่อกรอกข้อมูลอัตโนมัติ</p>
+      <ion-button
+        fill="outline"
+        expand="block"
+        (click)="openScanAssist()"
+        [disabled]="isSaving"
+        aria-label="เปิดกล้องสแกนมิเตอร์">
+        <ion-icon name="scan-outline" slot="start" aria-hidden="true"></ion-icon>
+        สแกนช่วยกรอก
+      </ion-button>
+    </div>
+
+    <!-- ── Submit ─────────────────────────────────────────────────────────── -->
+    <div class="submit-section">
+      <ion-button
+        expand="block"
+        color="primary"
+        type="submit"
+        [disabled]="isSaving"
+        [attr.aria-busy]="isSaving ? 'true' : null"
+        aria-label="บันทึกการเติมน้ำมัน">
+        <ion-spinner *ngIf="isSaving" name="crescent" aria-hidden="true"></ion-spinner>
+        <span *ngIf="!isSaving">
+          <ion-icon name="checkmark-outline" slot="start" aria-hidden="true"></ion-icon>
+          บันทึก
+        </span>
+      </ion-button>
+    </div>
+
+  </form>
+
+</ion-content>
+
+<!-- ── Scan-assist modal overlay ──────────────────────────────────────────── -->
+<ng-container *ngIf="scanOpen">
+  <div class="scan-overlay" role="dialog" aria-modal="true" aria-labelledby="scan-modal-title">
+    <div class="scan-modal-inner" cdkTrapFocus>
+
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title id="scan-modal-title">สแกนมิเตอร์</ion-title>
+          <ion-buttons slot="end">
+            <ion-button
+              (click)="closeScanAssist()"
+              aria-label="ปิดหน้าสแกน">
+              <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <!-- Error in scan context -->
+      <div class="error-banner" role="alert" *ngIf="scanError">
+        <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+        <span>{{ scanError }}</span>
+      </div>
+
+      <!-- Processing overlay -->
+      <div class="processing-overlay" *ngIf="isProcessing" aria-live="polite" aria-busy="true">
+        <ng-container *ngIf="!reducedMotion; else staticIndicator">
+          <ion-spinner name="crescent" color="primary" aria-hidden="true"></ion-spinner>
+        </ng-container>
+        <ng-template #staticIndicator>
+          <ion-icon name="hourglass-outline" color="primary" class="static-indicator" aria-hidden="true"></ion-icon>
+        </ng-template>
+        <p class="status-text">{{ processingStatus }}</p>
+      </div>
+
+      <!-- Canvas preview area -->
+      <div class="scan-canvas-area" *ngIf="currentImage && !isProcessing">
+        <!-- Manual drag hint (keyboard note for a11y — V3) -->
+        <p class="hint" *ngIf="manualMode">
+          ลากกรอบบนตัวเลข แล้วกด "อ่านค่า"
+          <br>
+          <small>(ใช้ปุ่มลูกศรบนคีย์บอร์ดเพื่อขยับกรอบ)</small>
+        </p>
+
+        <canvas
+          #canvas
+          class="crop-canvas"
+          [class.manual-mode]="manualMode"
+          tabindex="0"
+          role="img"
+          [attr.aria-label]="'ภาพมิเตอร์' + (hasSelection ? ' — มีกรอบเลือก' : '')"
+          (pointerdown)="onDown($event)"
+          (pointermove)="onMove($event)"
+          (pointerup)="onUp()"
+          (pointerleave)="onUp()"
+          (keydown)="onCanvasKey($event)">
+        </canvas>
+
+        <!-- Manual read button -->
+        <ion-button
+          expand="block"
+          *ngIf="manualMode"
+          (click)="read()"
+          [disabled]="!hasSelection || isProcessing"
+          [attr.aria-disabled]="!hasSelection || isProcessing ? 'true' : null"
+          aria-label="อ่านค่าจากพื้นที่ที่เลือก">
+          <ion-icon name="scan-outline" slot="start" aria-hidden="true"></ion-icon>
+          อ่านค่า
+        </ion-button>
+
+        <!-- Detected fields (read-only preview) -->
+        <div class="fields-result" *ngIf="detectedFields.length > 0"
+             aria-live="polite" aria-label="ผลการอ่านมิเตอร์">
+          <div class="field-row"
+               *ngFor="let f of detectedFields; let i = index"
+               [class.no-reading]="f.text === '—'"
+               [attr.aria-label]="f.label + ': ' + (f.text === '—' ? 'ไม่มีค่า' : f.text)">
+            <div class="field-label">{{ f.label }}</div>
+            <div class="field-value" [attr.aria-hidden]="f.text === '—' ? 'true' : null">
+              {{ f.text === '—' ? '—' : f.text }}
+            </div>
+          </div>
+          <!-- Use scan result button -->
+          <ion-button
+            expand="block"
+            color="primary"
+            (click)="applyScanResult()"
+            aria-label="นำค่าที่สแกนไปกรอกในฟอร์ม">
+            <ion-icon name="arrow-down-outline" slot="start" aria-hidden="true"></ion-icon>
+            ใช้ค่าที่สแกน
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Empty state in scan modal -->
+      <div class="scan-empty" *ngIf="!currentImage && !isProcessing">
+        <ion-icon name="camera-outline" class="scan-empty-icon" aria-hidden="true"></ion-icon>
+        <p>ถ่ายภาพหรือเลือกจากคลัง</p>
+      </div>
+
+      <!-- Camera/gallery actions -->
+      <ion-footer>
+        <ion-toolbar>
+          <div class="scan-actions">
+            <ion-button
+              fill="outline"
+              (click)="pick(false)"
+              [disabled]="isProcessing || isProcessing"
+              [attr.aria-disabled]="isProcessing || isProcessing ? 'true' : null"
+              aria-label="เลือกภาพจากคลัง">
+              <ion-icon name="images-outline" slot="start" aria-hidden="true"></ion-icon>
+              คลัง
+            </ion-button>
+            <ion-button
+              expand="block"
+              color="primary"
+              (click)="pick(true)"
+              [disabled]="isProcessing || isProcessing"
+              [attr.aria-disabled]="isProcessing || isProcessing ? 'true' : null"
+              class="scan-btn"
+              aria-label="ถ่ายภาพมิเตอร์">
+              <ion-icon name="camera-outline" slot="start" aria-hidden="true"></ion-icon>
+              ถ่ายภาพ
+            </ion-button>
+          </div>
+        </ion-toolbar>
+      </ion-footer>
+
+    </div>
+  </div>
+</ng-container>

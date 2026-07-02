@@ -1,0 +1,40 @@
+// Master data page (read-only) — DS tokens only
+
+.master-data-content {
+  --background: var(--color-surface-sunken);
+}
+
+.section-header {
+  --background: var(--color-surface-sunken);
+  margin-top: var(--space-4);
+
+  ion-label {
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+  }
+}
+
+.master-data-list {
+  margin-bottom: var(--space-2);
+
+  ion-item {
+    --background: var(--color-surface-raised);
+  }
+}
+
+.item-icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-lg);
+}
+
+.list-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  background: var(--color-surface-raised);
+  margin: 0 0 var(--space-2);
+}

@@ -1,7 +1,7 @@
 ---
 tags: [type/srs]
 status: draft                 # draft | review | approved | superseded
-version: 0.1.0
+version: 0.1.1
 date: 2026-06-28
 prd: "[[PRD-fuel-log]]"
 related_features:
@@ -223,6 +223,18 @@ related_functions:
 
 ---
 
+### FR-012 — Appearance / Theme (Dark Mode Toggle) — STUB, GAP
+
+> **สถานะ: stub เติมทีหลัง (post-hoc)** — เพิ่มโดย plan `[[2026-07-02-1526-settings-subpages-darkmode]]` (2026-07-02) หลังพบว่าไม่มี FR รองรับฟีเจอร์นี้ใน SRS. เนื้อหาด้านล่างมาจาก plan เท่านั้น — **ยังไม่ผ่าน clarify/review เต็มรูปแบบ** (ไม่มี Given/When/Then, ไม่มี priority ยืนยัน, ไม่มี NFR threshold). ห้ามถือเป็น contract ที่ล็อกแล้วจนกว่าจะรัน `/ow-clarify` หรือ `/ow-doc SRS` เพื่อเติมให้ครบ.
+
+- **Priority**: `<TODO — ยังไม่ยืนยัน>`
+- **Source**: plan `[[2026-07-02-1526-settings-subpages-darkmode]]` (ไม่มี user story ต้นทางใน [[PRD-fuel-log]])
+- **Description** (จาก plan เท่านั้น): toggle dark mode แบบ 2-state (สว่าง/มืด) ในหน้า Settings — persist ค่าด้วย Capacitor Preferences (key `theme`), apply ตอน app start ก่อน render แรก
+- **Acceptance**: `<TODO — ยังไม่มี Given/When/Then, ต้อง clarify>`
+- **Dependencies**: `<TODO>`
+
+---
+
 ### FR-020 — ~~Amount = Liters × Price Invariant~~ (REMOVED)
 
 > **ตัดออก** (Clarify 2026-06-29 Q4: "ไม่เช็คเลย"). liters / price / amount = field อิสระ เก็บตามกรอก — ไม่มี auto-calc, ไม่มี validation ความสัมพันธ์, ไม่มี warning. ความหมายเชิงโดเมน Amount=Liters×Price ยังจริง แต่ระบบ **ไม่บังคับ**. ดู FR-001 Pre-conditions.
@@ -339,6 +351,7 @@ related_functions:
 | FR-008 | [[FN-Overview]] | [[TP-fuel-log]] | not-started |
 | FR-010 | [[FN-DbService]] | [[TP-fuel-log]] | not-started |
 | FR-011 | [[FN-Seed]] | [[TP-fuel-log]] | not-started |
+| FR-012 | — | — | **gap — stub only, needs `/ow-clarify`** (added post-hoc by plan `[[2026-07-02-1526-settings-subpages-darkmode]]`) |
 | ~~FR-020~~ | — | — | removed (Clarify 2026-06-29) |
 
 ## 11. Dependencies (system-level)
@@ -382,3 +395,21 @@ Trigger: ออกแบบ navigation/tabs ([[FLOW-app-navigation]]) → เจ
 - **Q2 (Domain & Data) — image storage [SUPERSEDES 06-29 Q3]:** เก็บรูปยังไง? **A:** **save-to-gallery + เก็บ URI ลิงก์** (ถ่าย → บันทึกลงแกลเลอรีเครื่อง → เก็บ URI ใน row). **กลับคำจาก 06-29 Q3 (temp path)**. → 🔴 flag: แก้ Data Model §5 `image_uri` (temp path → gallery URI), FR-001/FR-006 เพิ่ม save-to-gallery step + permission (iOS photo-add / Android media); ยังคง placeholder ถ้าลิงก์หาย
 - **Q3 (Terminology / UX) — แท็บกลาง:** ชื่อแท็บ primary action? **A:** **"เพิ่ม" / add (⊕)** (สอดคล้อง PRD US1 กรอกเอง=P1, สแกน=P2 assist — [[PRD-fuel-log]] §7). → flag: [[FLOW-app-navigation]] ใช้ชื่อนี้แล้ว; เลิก option "Scan"/"เติม"
 - **Q4 (UX / NFR) — FR-008 visualization:** Overview แสดงผลแบบไหน (MVP)? **A:** **Summary cards + list** (ion-card ตัวเลขรวม + ion-list ย่อยตามกลุ่ม) — **ไม่ดึง chart lib ใน MVP** (รักษา SC-002 ≤1s @1000 entries; bundle เล็ก). กราฟ = [DEFERRED to Phase 2]. → flag: FR-008 เติม AC ระบุ cards+list; chart = backlog
+
+### Session 2026-07-02
+
+Trigger: FR-012 stub (post-hoc จาก plan dark-mode) ไม่มี priority/acceptance; FR-007 AC#1 มี TODO ค้าง (formula ambiguity).
+
+- **Q1 (Completion / FR-completeness) — FR-012 priority:** stub ยังไม่มี priority ยืนยัน **A:** **P3** (nice-to-have, ไม่ block release; ไม่ gate §12 Acceptance for Release) → flag: FR-012 เติม `Priority: P3`
+- **Q2 (Functional Scope) — FR-012 theme mode:** รองรับ "follow system" (auto) ไหม? **A:** **2-state เท่านั้น** (สว่าง/มืด) — ไม่ทำ 3-state/system-auto → flag: FR-012 description คงเดิม (2-state), ตัด option 3-state ออกจาก scope
+- **Q3 (Domain & Data) — FR-012 default ก่อน user ตั้งค่า:** key `theme` เริ่มต้นค่าไหนตอนเปิดแอปครั้งแรก? **A:** **ตามระบบ (OS system theme)** ณ ครั้งแรกที่ไม่มีค่าใน Preferences — หลัง user แตะ toggle แล้ว = ค่าที่ user เลือก persist ทับ (ไม่กลับไป auto อีก เพราะเป็น 2-state ไม่ใช่ 3-state) → flag: FR-012 เติม pre-condition "ไม่มี key `theme` ใน Preferences → read `prefers-color-scheme` เป็นค่าเริ่มต้นแสดงผล (ไม่เขียนลง Preferences จนกว่า user จะ toggle)"
+- **Q4 (FR-completeness) — FR-007 Σliters ใน rolling formula:** นับลิตรของ entry แรก (min-odometer) ในกลุ่มด้วยไหม? AC#1 เดิม `400÷40=10.0` ขัดหลัก tank-to-tank. **A:** **Exclude entry แรก** (tank-to-tank / full-tank convention — ลิตรที่เติม "ปิดช่วง" ระยะทางคือลิตรของ fill ถัดไป ไม่ใช่ fill ตั้งต้น) → AC#1 แก้เป็น `400÷35=11.4` → 🔴 flag: **FR-007 แก้ AC#1** (40→35, ผล 10.0→11.4) + Description เติมนิยาม "Σliters ของกลุ่ม = ผลรวม liters ของทุก entry **ยกเว้น entry ที่มี odometer ต่ำสุด** (ใช้เป็น baseline เริ่มระยะ ไม่ใช่ค่าใช้จ่ายของระยะนั้น)"
+
+### Session 2026-07-02 (b)
+
+Trigger: re-scan SRS-fuel-log — 4 ambiguity ที่ 4 session ก่อนยังไม่ครอบคลุม (cross-vehicle metric, orphan-photo, delete-active-trip, future-date).
+
+- **Q1 (Domain & Data / FR-completeness) — FR-007 km/L ในกลุ่มที่มีหลายคันรถ:** กลุ่ม เดือน/ทริป มี entry หลายคัน → `maxOdo−minOdo` คร่อมเลขไมล์คนละคัน = ไร้ความหมาย. **A:** **คำนวณต่อรถก่อนแล้ว aggregate** — แยก sub-group ตาม `vehicle_id`, คิด (maxOdo−minOdo)÷(Σliters ยกเว้น min-odo entry) ต่อรถ, แล้วรวมระดับกลุ่มเป็น `Σdistance ÷ Σliters(นับระยะ)` ข้ามรถ; entry ไม่ระบุรถ (`vehicle_id` NULL) → ข้าม (ไม่นับระยะ) → 🔴 flag: **FR-007 Description + AC** เพิ่ม rule per-vehicle sub-grouping สำหรับกลุ่ม เดือน/ทริป; FR-008 AC#4 อ้าง odometer ≥2 จุด **ต่อรถ**
+- **Q2 (Edge / Privacy) — ลบ entry ที่มี image_uri (gallery):** รูปในแกลเลอรีจัดการยังไงตอนลบ row? **A:** **คงรูปไว้ในแกลเลอรี** — ลบเฉพาะ DB row (รูปเป็นของ user ใน gallery ของเครื่อง, ไม่แตะ = ไม่ต้องขอ delete-permission cross-app, สอดคล้อง NFR-002 "ไม่ขอ permission ที่ไม่จำเป็น") → flag: FR-002 Post-conditions ระบุ "ลบ entry ไม่ลบรูปในแกลเลอรี (อาจ orphan — by design)"; NFR-002 note
+- **Q3 (Edge / State) — ลบ trip ที่กำลัง active:** เกิดอะไรกับสถานะ active? **A:** **บล็อกลบตอน active** — ต้อง "จบทริป" ก่อนถึงลบได้ (กัน orphan active-state; สอดคล้อง rule 1-active) → 🔴 flag: **FR-004** เพิ่ม pre-condition "ลบ trip ได้เฉพาะ ended/ไม่ active"; §7 Error Catalog เพิ่ม code ใหม่ (เช่น `TRIP_ACTIVE_DEL` — "จบทริปก่อนลบ"); §6 State & Lifecycle note; FR-004 acceptance เพิ่ม 1 scenario
+- **Q4 (Edge / Validation) — FR-001 datetime อนาคต:** อนุญาต datetime > now ไหม? **A:** **อนุญาต ไม่ validate** (สอดคล้องปรัชญา minimal-validation ของแอป — เหมือน liters/price/amount ที่ไม่ validate ความสัมพันธ์, FR-020 ตัดทิ้ง) → flag: FR-001 Pre-conditions ระบุ "datetime รับค่าใดก็ได้รวมอนาคต — ไม่ validate"; overview รายเดือนจัดกลุ่มตาม datetime ตามจริง (entry อนาคตไปอยู่เดือนอนาคต)

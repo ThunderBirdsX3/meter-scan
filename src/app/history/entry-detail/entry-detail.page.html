@@ -1,0 +1,131 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/history" aria-label="กลับ"></ion-back-button>
+    </ion-buttons>
+    <ion-title>รายละเอียด</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openEdit()" aria-label="แก้ไขรายการ">
+        <ion-icon name="create-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="detail-content" *ngIf="entry">
+
+  <!-- Image / placeholder (SRS Q3 — temp path may be missing) -->
+  <div class="image-block">
+    <img
+      *ngIf="entry.imageUri && !imageError"
+      [src]="entry.imageUri"
+      [alt]="'รูปมิเตอร์ ' + (entry.datetime | date:'dd MMM yyyy')"
+      class="entry-image"
+      (error)="imageError = true" />
+
+    <!-- Placeholder: not a silent box — has visible text + aria-label (DS #12 rule) -->
+    <div
+      *ngIf="!entry.imageUri || imageError"
+      class="image-placeholder"
+      role="img"
+      aria-label="ไม่มีรูปภาพ">
+      <ion-icon name="camera-outline" aria-hidden="true"></ion-icon>
+      <span>ไม่มีรูปภาพ</span>
+    </div>
+  </div>
+
+  <!-- Readout rows (DS Component #3) -->
+  <div class="readout-section">
+
+    <div class="readout-row" *ngIf="entry.datetime">
+      <div class="readout-label">วันที่เวลา</div>
+      <div class="readout-value date-value">{{ entry.datetime | date:'dd MMMM yyyy HH:mm' }}</div>
+    </div>
+
+    <div class="readout-row accent-row"
+         [class.no-reading]="!entry.totalAmount"
+         [attr.aria-label]="'ยอดรวม: ' + (entry.totalAmount ? (entry.totalAmount | number:'1.2-2') + ' บาท' : 'ไม่มีข้อมูล')">
+      <div class="readout-label">ยอดรวม</div>
+      <div class="readout-value" [attr.aria-hidden]="!entry.totalAmount ? 'true' : null">
+        {{ entry.totalAmount ? (entry.totalAmount | number:'1.2-2') + ' ฿' : '—' }}
+      </div>
+    </div>
+
+    <div class="readout-row accent-row"
+         [class.no-reading]="!entry.liters"
+         [attr.aria-label]="'ลิตร: ' + (entry.liters ? (entry.liters | number:'1.1-1') + ' ลิตร' : 'ไม่มีข้อมูล')">
+      <div class="readout-label">ลิตร</div>
+      <div class="readout-value" [attr.aria-hidden]="!entry.liters ? 'true' : null">
+        {{ entry.liters ? (entry.liters | number:'1.1-1') + ' L' : '—' }}
+      </div>
+    </div>
+
+    <div class="readout-row accent-row"
+         [class.no-reading]="!entry.pricePerLiter"
+         [attr.aria-label]="'ราคาต่อลิตร: ' + (entry.pricePerLiter ? (entry.pricePerLiter | number:'1.2-2') + ' บาท' : 'ไม่มีข้อมูล')">
+      <div class="readout-label">฿/ลิตร</div>
+      <div class="readout-value" [attr.aria-hidden]="!entry.pricePerLiter ? 'true' : null">
+        {{ entry.pricePerLiter ? (entry.pricePerLiter | number:'1.2-2') : '—' }}
+      </div>
+    </div>
+
+    <div class="readout-row" *ngIf="entry.odometer">
+      <div class="readout-label">เลขไมล์</div>
+      <div class="readout-value">{{ entry.odometer | number }} กม.</div>
+    </div>
+
+    <div class="readout-row" *ngIf="vehicleName">
+      <div class="readout-label">รถ</div>
+      <div class="readout-value text-value">{{ vehicleName }}</div>
+    </div>
+
+    <div class="readout-row" *ngIf="tripName">
+      <div class="readout-label">ทริป</div>
+      <div class="readout-value text-value">{{ tripName }}</div>
+    </div>
+
+    <div class="readout-row" *ngIf="brandName">
+      <div class="readout-label">แบรนด์</div>
+      <div class="readout-value text-value">{{ brandName }}</div>
+    </div>
+
+    <div class="readout-row" *ngIf="fuelTypeName">
+      <div class="readout-label">ประเภท</div>
+      <div class="readout-value text-value">{{ fuelTypeName }}</div>
+    </div>
+
+    <div class="readout-row" *ngIf="entry.station">
+      <div class="readout-label">สถานีบริการ</div>
+      <div class="readout-value text-value">{{ entry.station }}</div>
+    </div>
+
+    <div class="readout-row" *ngIf="entry.note">
+      <div class="readout-label">หมายเหตุ</div>
+      <div class="readout-value text-value">{{ entry.note }}</div>
+    </div>
+
+  </div>
+
+  <!-- Delete button -->
+  <div class="delete-section">
+    <ion-button
+      fill="outline"
+      expand="block"
+      class="delete-btn"
+      (click)="confirmDelete()"
+      aria-label="ลบรายการนี้">
+      <ion-icon name="trash-outline" slot="start" aria-hidden="true"></ion-icon>
+      ลบรายการ
+    </ion-button>
+  </div>
+
+</ion-content>
+
+<!-- Delete confirm -->
+<ion-alert
+  [isOpen]="deleteAlertOpen"
+  header="ลบรายการ?"
+  message="การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+  [buttons]="alertButtons"
+  (didDismiss)="deleteAlertOpen = false">
+</ion-alert>

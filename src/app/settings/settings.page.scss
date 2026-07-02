@@ -1,0 +1,43 @@
+// Settings page — DS tokens only
+
+.settings-content {
+  --background: var(--color-surface-sunken);
+}
+
+// ── Section header ────────────────────────────────────────────────────────
+.section-header {
+  --background: var(--color-surface-sunken);
+  margin-top: var(--space-4);
+
+  ion-label {
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Settings list ─────────────────────────────────────────────────────────
+.settings-list {
+  margin-bottom: var(--space-2);
+
+  ion-item {
+    --background: var(--color-surface-raised);
+  }
+}
+
+.item-icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-lg);
+
+  &--danger {
+    color: var(--color-text-danger);
+  }
+}
+
+// ── Placeholder note ──────────────────────────────────────────────────────
+.placeholder-note {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}

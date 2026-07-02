@@ -1,0 +1,130 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/settings" aria-label="กลับ"></ion-back-button>
+    </ion-buttons>
+    <ion-title>รถของฉัน</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        fill="clear"
+        (click)="openVehicleModal()"
+        aria-label="เพิ่มรถใหม่">
+        <ion-icon name="add-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="vehicles-content">
+
+  <ion-list lines="inset" class="vehicles-list" *ngIf="vehicles.length > 0">
+    <ion-item-sliding *ngFor="let v of vehicles">
+      <ion-item>
+        <ion-icon name="car-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+        <ion-label>
+          <h3>{{ v.name }}</h3>
+          <p>{{ v.licensePlate }}</p>
+        </ion-label>
+        <!-- Non-swipe a11y path: inline edit/delete buttons always visible -->
+        <ion-buttons slot="end" class="item-actions">
+          <ion-button
+            fill="clear"
+            (click)="openVehicleModal(v)"
+            [attr.aria-label]="'แก้ไข ' + v.name">
+            <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button
+            fill="clear"
+            (click)="confirmDeleteVehicle(v)"
+            [attr.aria-label]="'ลบ ' + v.name"
+            class="delete-action">
+            <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option (click)="openVehicleModal(v)" [attr.aria-label]="'แก้ไข ' + v.name">
+          <ion-icon name="create-outline" aria-hidden="true" slot="icon-only"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="danger" (click)="confirmDeleteVehicle(v)" [attr.aria-label]="'ลบ ' + v.name">
+          <ion-icon name="trash-outline" aria-hidden="true" slot="icon-only"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-list>
+
+  <div class="list-empty" *ngIf="vehicles.length === 0">
+    <p>ยังไม่มีรถ — กด "+" เพื่อเพิ่ม</p>
+  </div>
+
+</ion-content>
+
+<!-- ── Vehicle Modal (DS Component #11) ──────────────────────────────────── -->
+<ion-modal [isOpen]="vehicleModalOpen" (ionModalDidDismiss)="onVehicleModalDismiss()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title id="vehicle-modal-title">{{ vehicleModalMode === 'add' ? 'เพิ่มรถ' : 'แก้ไขรถ' }}</ion-title>
+        <ion-buttons slot="start">
+          <ion-button (click)="cancelVehicleModal()" aria-label="ยกเลิก">ยกเลิก</ion-button>
+        </ion-buttons>
+        <ion-buttons slot="end">
+          <ion-button
+            color="primary"
+            [disabled]="!vehicleDraft.name || vehicleIsSaving"
+            [attr.aria-disabled]="!vehicleDraft.name || vehicleIsSaving ? 'true' : null"
+            [attr.aria-busy]="vehicleIsSaving ? 'true' : null"
+            (click)="saveVehicle()"
+            aria-label="บันทึกข้อมูลรถ">
+            บันทึก
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="modal-content" aria-labelledby="vehicle-modal-title">
+      <div class="modal-form">
+
+        <ion-item class="field-item">
+          <ion-label position="stacked" class="field-label">ชื่อรถ *</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="vehicleDraft.name"
+            placeholder="เช่น Toyota Corolla"
+            aria-label="ชื่อรถ จำเป็น">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="field-item">
+          <ion-label position="stacked" class="field-label">ทะเบียนรถ</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="vehicleDraft.licensePlate"
+            placeholder="เช่น กข 1234"
+            aria-label="หมายเลขทะเบียนรถ">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="field-item">
+          <ion-label position="stacked" class="field-label">ประเภทน้ำมัน</ion-label>
+          <ion-select
+            [(ngModel)]="vehicleDraft.fuelTypeId"
+            placeholder="เลือก"
+            interface="action-sheet"
+            aria-label="เลือกประเภทน้ำมันหลักของรถ">
+            <ion-select-option *ngFor="let ft of fuelTypes" [value]="ft.id">{{ ft.name }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- ── Delete confirm alert ──────────────────────────────────────────────── -->
+<ion-alert
+  [isOpen]="deleteVehicleAlertOpen"
+  header="ลบรถ?"
+  message="การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+  [buttons]="deleteVehicleButtons"
+  (didDismiss)="deleteVehicleAlertOpen = false">
+</ion-alert>

@@ -1,0 +1,125 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>ภาพรวม</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="stats-content">
+
+  <!-- Segmented control (DS Component #8) -->
+  <div class="segment-wrapper">
+    <ion-segment
+      [(ngModel)]="activeSegment"
+      (ionChange)="onSegmentChange()"
+      class="stats-segment"
+      aria-label="เลือกมุมมองสถิติ">
+      <ion-segment-button value="trip">
+        <ion-label>ทริป</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="month">
+        <ion-label>เดือน</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="vehicle">
+        <ion-label>รถ</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <div *ngIf="overview" class="stats-body" aria-live="polite">
+
+    <!-- Summary cards grid (DS Component #9) -->
+    <div class="stat-grid">
+
+      <!-- Total amount — emphasized (full width) -->
+      <ion-card class="stat-card stat-card--full"
+                role="group"
+                [attr.aria-label]="'ยอดรวม ' + (overview.totalAmount | number:'1.2-2') + ' บาท'">
+        <div class="stat-label accent-label">ยอดรวม</div>
+        <div class="stat-value">
+          {{ overview.totalAmount | number:'1.0-0' }}
+          <span class="stat-unit">฿</span>
+        </div>
+      </ion-card>
+
+      <!-- Fill count -->
+      <ion-card class="stat-card stat-card--half"
+                role="group"
+                [attr.aria-label]="'จำนวนครั้ง ' + overview.fillCount + ' ครั้ง'">
+        <div class="stat-label">ครั้ง</div>
+        <div class="stat-value">
+          {{ overview.fillCount }}
+          <span class="stat-unit">ครั้ง</span>
+        </div>
+      </ion-card>
+
+      <!-- Total liters -->
+      <ion-card class="stat-card stat-card--half"
+                role="group"
+                [attr.aria-label]="'รวม ' + (overview.totalLiters | number:'1.1-1') + ' ลิตร'">
+        <div class="stat-label">ปริมาณน้ำมัน</div>
+        <div class="stat-value">
+          {{ overview.totalLiters | number:'1.1-1' }}
+          <span class="stat-unit">L</span>
+        </div>
+      </ion-card>
+
+      <!-- Avg price/L -->
+      <ion-card class="stat-card stat-card--half"
+                role="group"
+                [attr.aria-label]="'เฉลี่ย ' + (overview.avgPricePerLiter | number:'1.2-2') + ' บาทต่อลิตร'">
+        <div class="stat-label">เฉลี่ย ฿/ลิตร</div>
+        <div class="stat-value">
+          {{ overview.avgPricePerLiter | number:'1.2-2' }}
+          <span class="stat-unit">฿/L</span>
+        </div>
+      </ion-card>
+
+      <!-- km/L -->
+      <ion-card class="stat-card stat-card--half"
+                role="group"
+                [attr.aria-label]="overview.kmPerLiter ? (overview.kmPerLiter | number:'1.1-1') + ' กิโลเมตรต่อลิตร' : 'ไม่มีข้อมูลอัตราสิ้นเปลือง'">
+        <div class="stat-label">กม./ลิตร</div>
+        <div class="stat-value"
+             [class.no-data]="!overview.kmPerLiter"
+             [attr.aria-hidden]="!overview.kmPerLiter ? 'true' : null">
+          {{ overview.kmPerLiter ? (overview.kmPerLiter | number:'1.1-1') : '—' }}
+          <span class="stat-unit" *ngIf="overview.kmPerLiter">กม./ล.</span>
+        </div>
+      </ion-card>
+
+    </div>
+
+    <!-- Group breakdown rows -->
+    <div class="breakdown-section" *ngIf="overview.groupRows.length > 0">
+      <h3 class="breakdown-title">รายละเอียด</h3>
+      <ion-list lines="none" class="breakdown-list">
+        <ion-item
+          *ngFor="let row of overview.groupRows"
+          class="breakdown-item"
+          [attr.aria-label]="row.label + ': ' + (row.amount | number:'1.0-0') + ' บาท, ' + row.count + ' ครั้ง'">
+          <ion-label>
+            <div class="row-name">{{ row.label }}</div>
+            <div class="row-meta">{{ row.count }} ครั้ง · {{ row.liters | number:'1.1-1' }} L</div>
+          </ion-label>
+          <div slot="end" class="row-amount">
+            {{ row.amount | number:'1.0-0' }} ฿
+          </div>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Empty breakdown -->
+    <div class="breakdown-empty" *ngIf="overview.groupRows.length === 0">
+      <p>ยังไม่มีข้อมูลในช่วงนี้</p>
+    </div>
+
+  </div>
+
+  <!-- Loading / no data -->
+  <div class="stats-empty" *ngIf="!overview">
+    <ion-icon name="pie-chart-outline" class="hero-icon" aria-hidden="true"></ion-icon>
+    <h2>ยังไม่มีข้อมูล</h2>
+    <p>เพิ่มการเติมน้ำมันในแท็บ "เพิ่ม"</p>
+  </div>
+
+</ion-content>

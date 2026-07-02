@@ -2,8 +2,9 @@
   <ion-toolbar color="primary">
     <ion-title>Fuel Meter Scanner</ion-title>
     <ion-buttons slot="end" *ngIf="currentImage">
-      <ion-button (click)="clearCurrent()">
-        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      <!-- V2 fix: aria-label on icon-only dismiss button -->
+      <ion-button (click)="clearCurrent()" aria-label="ปิดภาพปัจจุบัน">
+        <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -11,58 +12,112 @@
 
 <ion-content [fullscreen]="true">
 
-  <!-- Processing overlay -->
-  <div class="processing-overlay" *ngIf="isProcessing">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
+  <!-- Processing overlay (manual read only) -->
+  <!-- V7 fix: aria-live + aria-busy; spinner gets reduced-motion guard via SCSS -->
+  <div class="processing-overlay" *ngIf="isProcessing" aria-live="polite" aria-busy="true">
+    <ion-spinner name="crescent" color="primary" aria-hidden="true"></ion-spinner>
     <p class="status-text">{{ processingStatus }}</p>
   </div>
 
-  <!-- Crop + result -->
-  <div class="preview-section" *ngIf="currentImage">
-    <p class="hint">Drag a box over the number, then tap Read</p>
+  <!-- Preview + results -->
+  <div class="preview-section" *ngIf="currentImage && !isProcessing">
+
+    <!-- Auto-scan in progress -->
+    <div class="auto-scan-status" *ngIf="autoDetecting" aria-live="polite">
+      <ion-spinner name="dots" color="primary" aria-hidden="true"></ion-spinner>
+      <span>กำลังตรวจจับมิเตอร์…</span>
+    </div>
+
+    <!-- Manual drag hint -->
+    <p class="hint" *ngIf="manualMode && !autoDetecting">
+      ลากกรอบบนตัวเลข แล้วกด "อ่านค่า"
+      <br>
+      <small>(ใช้ปุ่มลูกศรบนคีย์บอร์ดเพื่อขยับกรอบ)</small>
+    </p>
+
+    <!-- V3 fix: canvas is focusable with tabindex + keyboard handler + role+aria-label -->
     <canvas #canvas class="crop-canvas"
+            [class.manual-mode]="manualMode"
+            tabindex="0"
+            role="img"
+            [attr.aria-label]="'ภาพมิเตอร์' + (hasSelection ? ' — มีกรอบเลือก' : '')"
             (pointerdown)="onDown($event)"
             (pointermove)="onMove($event)"
             (pointerup)="onUp()"
-            (pointerleave)="onUp()"></canvas>
+            (pointerleave)="onUp()"
+            (keydown)="onCanvasKey($event)">
+    </canvas>
 
-    <ion-button expand="block" (click)="read()" [disabled]="!hasSelection || isProcessing">
-      <ion-icon name="scan-outline" slot="start"></ion-icon>
-      Read selected
+    <!-- Manual read button -->
+    <ion-button expand="block" *ngIf="manualMode" (click)="read()"
+                [disabled]="!hasSelection || autoDetecting"
+                [attr.aria-disabled]="!hasSelection || autoDetecting ? 'true' : null"
+                aria-label="อ่านค่าจากพื้นที่ที่เลือก">
+      <ion-icon name="scan-outline" slot="start" aria-hidden="true"></ion-icon>
+      อ่านค่า
     </ion-button>
 
-    <div class="result-card" *ngIf="currentReading" [class.no-reading]="currentReading === '—'">
-      <div class="reading-label">METER READING</div>
-      <div class="reading-value">{{ currentReading }}</div>
+    <!-- Action buttons after auto-detect or failure -->
+    <div class="rescan-actions" *ngIf="!autoDetecting">
+      <ion-button fill="outline" size="small" (click)="autoDetect()" aria-label="สแกนใหม่อัตโนมัติ">
+        <ion-icon name="refresh-outline" slot="start" aria-hidden="true"></ion-icon>
+        Re-scan
+      </ion-button>
+      <ion-button fill="outline" size="small" (click)="startManual()" aria-label="เลือกพื้นที่ด้วยตนเอง">
+        <ion-icon name="crop-outline" slot="start" aria-hidden="true"></ion-icon>
+        Select manually
+      </ion-button>
     </div>
+
+    <!-- Detected fields result cards -->
+    <!-- V6 fix: no-reading rows get aria-label "no reading" so AT perceives state -->
+    <div class="fields-result" *ngIf="detectedFields.length > 0 && !autoDetecting"
+         aria-live="polite" aria-label="ผลการอ่านมิเตอร์">
+      <div class="field-row" *ngFor="let f of detectedFields; let i = index"
+           [class.no-reading]="f.text === '—'"
+           [attr.aria-label]="f.label + ': ' + (f.text === '—' ? 'ไม่มีค่า' : f.text)">
+        <div class="field-label">{{ f.label }}</div>
+        <div class="field-value" [attr.aria-hidden]="f.text === '—' ? 'true' : null">
+          {{ f.text }}
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Empty state -->
   <div class="empty-state" *ngIf="!currentImage && !isProcessing">
-    <ion-icon name="speedometer-outline" class="hero-icon"></ion-icon>
+    <ion-icon name="speedometer-outline" class="hero-icon" aria-hidden="true"></ion-icon>
     <h2>Fuel Meter Scanner</h2>
-    <p>Point camera at the fuel dispenser meter and tap Scan</p>
-    <p class="note">On-device AI — no internet required</p>
+    <p>ถ่ายภาพมิเตอร์น้ำมันแล้วกด Scan</p>
+    <p class="note">AI บนเครื่อง — ไม่ต้องใช้อินเทอร์เน็ต</p>
   </div>
 
-  <!-- Error -->
-  <div class="error-banner" *ngIf="error && !isProcessing">
-    <ion-icon name="alert-circle-outline"></ion-icon>
+  <!-- V5 fix: role=alert on error banner (was missing) -->
+  <!-- V1 fix: bg/color now via DS tokens in SCSS (5.28:1 PASS) -->
+  <div class="error-banner" role="alert" *ngIf="error && !isProcessing && !autoDetecting">
+    <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
     <span>{{ error }}</span>
   </div>
 
   <!-- History -->
   <div class="history-section" *ngIf="history.length > 0 && !isProcessing">
     <ion-list-header>
-      <ion-label>Scan History</ion-label>
+      <ion-label>ประวัติการสแกน</ion-label>
     </ion-list-header>
     <ion-list lines="inset">
       <ion-item *ngFor="let item of history">
         <ion-thumbnail slot="start" class="history-thumb">
-          <img [src]="item.imageUrl" />
+          <!-- V4 fix: img alt attribute -->
+          <img [src]="item.imageUrl"
+               [alt]="'ภาพสแกน ' + (item.timestamp | date:'dd MMM HH:mm')" />
         </ion-thumbnail>
         <ion-label>
-          <h2 class="history-reading">{{ item.reading }}</h2>
+          <div class="history-fields">
+            <span *ngFor="let f of item.fields" class="history-reading">
+              {{ f.label }}: {{ f.text }}
+            </span>
+          </div>
           <p>{{ item.timestamp | date:'dd MMM HH:mm' }}</p>
         </ion-label>
       </ion-item>
@@ -75,12 +130,20 @@
 <ion-footer>
   <ion-toolbar>
     <div class="scan-actions">
-      <ion-button fill="outline" (click)="pick(false)" [disabled]="isProcessing" class="gallery-btn">
-        <ion-icon name="images-outline" slot="start"></ion-icon>
+      <ion-button fill="outline" (click)="pick(false)"
+                  [disabled]="isProcessing || autoDetecting"
+                  [attr.aria-disabled]="isProcessing || autoDetecting ? 'true' : null"
+                  class="gallery-btn"
+                  aria-label="เลือกภาพจากคลัง">
+        <ion-icon name="images-outline" slot="start" aria-hidden="true"></ion-icon>
         Gallery
       </ion-button>
-      <ion-button expand="block" (click)="pick(true)" [disabled]="isProcessing" class="scan-btn" color="primary">
-        <ion-icon name="camera-outline" slot="start"></ion-icon>
+      <ion-button expand="block" (click)="pick(true)"
+                  [disabled]="isProcessing || autoDetecting"
+                  [attr.aria-disabled]="isProcessing || autoDetecting ? 'true' : null"
+                  class="scan-btn" color="primary"
+                  aria-label="ถ่ายภาพมิเตอร์">
+        <ion-icon name="camera-outline" slot="start" aria-hidden="true"></ion-icon>
         Scan Meter
       </ion-button>
     </div>
