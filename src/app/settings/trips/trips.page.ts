@@ -17,12 +17,12 @@ export class TripsPage implements OnInit {
   tripModalOpen = false;
   tripModalMode: 'add' | 'edit' = 'add';
   tripDraft: Partial<Trip> = {};
-  private tripEditId: string | null = null;
+  private tripEditId: number | null = null;
   tripIsSaving = false;
 
   // ── Delete alert ──────────────────────────────────────────────────────────
   deleteTripAlertOpen = false;
-  private deleteTripId: string | null = null;
+  private deleteTripId: number | null = null;
   deleteTripButtons = [
     { text: 'ยกเลิก', role: 'cancel' },
     { text: 'ลบ', role: 'destructive', handler: () => this.doDeleteTrip() },
@@ -71,8 +71,11 @@ export class TripsPage implements OnInit {
       if (this.tripModalMode === 'add') {
         await this.data.addTrip({
           name: this.tripDraft.name,
-          vehicleId: this.tripDraft.vehicleId ?? '',
+          vehicleId: this.tripDraft.vehicleId || undefined,
           startOdometer: this.tripDraft.startOdometer,
+          // This CRUD form does not manage the active-trip lifecycle (FR-004 P2 auto-tag
+          // behavior is out of scope for this plan — see FR Coverage) — new trips start inactive.
+          isActive: false,
         });
       } else if (this.tripEditId) {
         await this.data.updateTrip(this.tripEditId, this.tripDraft);

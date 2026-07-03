@@ -14,10 +14,18 @@ export class ThemeService {
 
   private dark = false;
 
-  /** Load persisted pref (default 'light' if unset) and apply immediately. */
+  /**
+   * Load persisted pref and apply immediately. If unset (fresh install),
+   * fall back to OS `prefers-color-scheme` without writing it to Preferences —
+   * first `setDark` call is what actually persists a choice (FR-012).
+   */
   async init(): Promise<void> {
     const { value } = await Preferences.get({ key: THEME_KEY });
-    this.dark = value === 'dark';
+    if (value === 'dark' || value === 'light') {
+      this.dark = value === 'dark';
+    } else {
+      this.dark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    }
     this.apply();
   }
 

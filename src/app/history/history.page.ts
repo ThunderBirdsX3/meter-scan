@@ -21,18 +21,18 @@ export class HistoryPage implements OnInit {
   trips: Trip[] = [];
   isLoading = false;
 
-  filterVehicleId = '';
-  filterTripId = '';
+  filterVehicleId: number | '' = '';
+  filterTripId: number | '' = '';
 
   // Edit modal state
   editModalOpen = false;
   editDraft: Partial<FuelEntry> | null = null;
-  private editTargetId: string | null = null;
+  private editTargetId: number | null = null;
   editIsSaving = false;
 
   // Delete alert state
   deleteAlertOpen = false;
-  private deleteTargetId: string | null = null;
+  private deleteTargetId: number | null = null;
   deleteAlertButtons = [
     {
       text: 'ยกเลิก',

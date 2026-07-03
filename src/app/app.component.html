@@ -1,3 +1,29 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ng-container *ngIf="dbReady; else dbNotReady">
+    <ion-router-outlet></ion-router-outlet>
+  </ng-container>
+
+  <ng-template #dbNotReady>
+    <ng-container *ngIf="dbError; else dbLoading">
+      <div class="db-init-error" role="alert">
+        <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+        <p>{{ dbError }}</p>
+        <ion-button
+          color="primary"
+          (click)="retryDbInit()"
+          [disabled]="isRetrying"
+          [attr.aria-disabled]="isRetrying ? 'true' : null"
+          [attr.aria-busy]="isRetrying ? 'true' : null"
+          aria-label="ลองเปิดฐานข้อมูลอีกครั้ง">
+          <ion-spinner *ngIf="isRetrying" name="crescent" aria-hidden="true"></ion-spinner>
+          <span *ngIf="!isRetrying">ลองอีกครั้ง</span>
+        </ion-button>
+      </div>
+    </ng-container>
+    <ng-template #dbLoading>
+      <div class="db-init-loading" aria-live="polite" aria-busy="true">
+        <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+      </div>
+    </ng-template>
+  </ng-template>
 </ion-app>

@@ -17,12 +17,12 @@ export class VehiclesPage implements OnInit {
   vehicleModalOpen = false;
   vehicleModalMode: 'add' | 'edit' = 'add';
   vehicleDraft: Partial<Vehicle> = {};
-  private vehicleEditId: string | null = null;
+  private vehicleEditId: number | null = null;
   vehicleIsSaving = false;
 
   // ── Delete alert ──────────────────────────────────────────────────────────
   deleteVehicleAlertOpen = false;
-  private deleteVehicleId: string | null = null;
+  private deleteVehicleId: number | null = null;
   deleteVehicleButtons = [
     { text: 'ยกเลิก', role: 'cancel' },
     { text: 'ลบ', role: 'destructive', handler: () => this.doDeleteVehicle() },
@@ -71,8 +71,8 @@ export class VehiclesPage implements OnInit {
       if (this.vehicleModalMode === 'add') {
         await this.data.addVehicle({
           name: this.vehicleDraft.name,
-          licensePlate: this.vehicleDraft.licensePlate ?? '',
-          fuelTypeId: this.vehicleDraft.fuelTypeId ?? '',
+          licensePlate: this.vehicleDraft.licensePlate || undefined,
+          fuelTypeId: this.vehicleDraft.fuelTypeId || undefined,
         });
       } else if (this.vehicleEditId) {
         await this.data.updateVehicle(this.vehicleEditId, this.vehicleDraft);

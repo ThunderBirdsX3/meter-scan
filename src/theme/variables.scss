@@ -5,7 +5,7 @@
 // DS-Tokens v2 — Teal/Emerald retheme (clean-fintech-tracker)
 // Primitive tokens → mapped to Ionic color vars + DS semantic vars
 // DO NOT add raw hex/rgb here — use primitives named below then semantic refs.
-// Light mode = :root; dark mode overrides via dark.system.css (media query in global.scss)
+// Light mode = :root; dark mode overrides via dark.class.css (manual `.ion-palette-dark` class toggle in global.scss — NOT OS-media-based)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Primitive tokens (raw values) ──────────────────────────────────────────
@@ -157,52 +157,50 @@
 }
 
 // ── Semantic tokens — DARK MODE ───────────────────────────────────────────
-// Injected via dark.system.css @media prefers-color-scheme:dark
-// We override DS semantic vars; Ionic dark palette handles ion-color-* via dark.system.css
-@media (prefers-color-scheme: dark) {
-  :root {
-    // Text
-    --color-text-default: #ffffff;
-    --color-text-muted:   #a0a0a0;
-    --color-text-subtle:  #8a8a8a;
-    --color-text-inverse: var(--color-neutral-900);   // dark text on lighter bg
-    --color-text-danger:  #ff6b6b;
-    --color-text-link:    var(--color-teal-500);
+// Injected via dark.class.css `.ion-palette-dark` class (manual toggle — see theme.service.ts)
+// We override DS semantic vars; Ionic dark palette handles ion-color-* via dark.class.css
+.ion-palette-dark {
+  // Text
+  --color-text-default: #ffffff;
+  --color-text-muted:   #a0a0a0;
+  --color-text-subtle:  #8a8a8a;
+  --color-text-inverse: var(--color-neutral-900);   // dark text on lighter bg
+  --color-text-danger:  #ff6b6b;
+  --color-text-link:    var(--color-teal-500);
 
-    // Surface
-    --color-surface-base:   #121212;
-    --color-surface-raised: #1e1e1e;
-    --color-surface-sunken: #0a0a0a;
-    --color-surface-danger: #3a1416;
+  // Surface
+  --color-surface-base:   #121212;
+  --color-surface-raised: #1e1e1e;
+  --color-surface-sunken: #0a0a0a;
+  --color-surface-danger: #3a1416;
 
-    // Action — PRIMARY (dark: teal-500 on dark text #222428 = 6.24:1 PASS)
-    --color-action-primary-default:  var(--color-teal-500);
-    --color-action-primary-hover:    var(--color-teal-600);
-    --color-action-primary-active:   var(--color-teal-600);
-    --color-action-primary-disabled: #2a2a2a;
-    --color-action-accent-default:   var(--color-emerald-400);
+  // Action — PRIMARY (dark: teal-500 on dark text #222428 = 6.24:1 PASS)
+  --color-action-primary-default:  var(--color-teal-500);
+  --color-action-primary-hover:    var(--color-teal-600);
+  --color-action-primary-active:   var(--color-teal-600);
+  --color-action-primary-disabled: #2a2a2a;
+  --color-action-accent-default:   var(--color-emerald-400);
 
-    // Border / focus (dark)
-    --color-border-default: #2a2a2a;
-    --color-border-subtle:  #1e1e1e;
-    --color-border-focus:   var(--color-teal-500);
+  // Border / focus (dark)
+  --color-border-default: #2a2a2a;
+  --color-border-subtle:  #1e1e1e;
+  --color-border-focus:   var(--color-teal-500);
 
-    // Accent (dark)
-    --color-accent-reading:  var(--color-emerald-400);
-    --color-accent-emphasis: var(--color-emerald-400);
+  // Accent (dark)
+  --color-accent-reading:  var(--color-emerald-400);
+  --color-accent-emphasis: var(--color-emerald-400);
 
-    // Ionic overrides for dark
-    --ion-color-primary:          var(--color-teal-500);
-    --ion-color-primary-rgb:      20, 184, 166;
-    --ion-color-primary-contrast: var(--color-neutral-900);
-    --ion-color-primary-contrast-rgb: 34, 36, 40;
-    --ion-color-primary-shade:    var(--color-teal-600);
-    --ion-color-primary-tint:     var(--color-teal-400, #2dd4bf);
+  // Ionic overrides for dark
+  --ion-color-primary:          var(--color-teal-500);
+  --ion-color-primary-rgb:      20, 184, 166;
+  --ion-color-primary-contrast: var(--color-neutral-900);
+  --ion-color-primary-contrast-rgb: 34, 36, 40;
+  --ion-color-primary-shade:    var(--color-teal-600);
+  --ion-color-primary-tint:     var(--color-teal-400, #2dd4bf);
 
-    --ion-background-color: var(--color-surface-base);
-    --ion-text-color:        var(--color-text-default);
-    --ion-card-background:   var(--color-surface-raised);
-    --ion-item-background:   var(--color-surface-raised);
-    --ion-toolbar-background: var(--color-surface-raised);
-  }
+  --ion-background-color: var(--color-surface-base);
+  --ion-text-color:        var(--color-text-default);
+  --ion-card-background:   var(--color-surface-raised);
+  --ion-item-background:   var(--color-surface-raised);
+  --ion-toolbar-background: var(--color-surface-raised);
 }

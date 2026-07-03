@@ -47,6 +47,18 @@ export class AddPage implements OnInit, AfterViewInit {
   // a11y: reduced-motion check (V7 fix)
   reducedMotion = false;
 
+  // ── Brand logo / fuel-type color preview (supplemental chip — Design Addition,
+  // brand identity is NOT a DS token; see plan 2026-07-02-2140-sqlite-persistence-seed) ────────
+  brandLogoError = false;
+
+  get selectedBrand(): Brand | undefined {
+    return this.brands.find(b => b.id === this.draft.brandId);
+  }
+
+  get selectedFuelType(): FuelType | undefined {
+    return this.fuelTypes.find(ft => ft.id === this.draft.fuelTypeId);
+  }
+
   private img: HTMLImageElement | null = null;
   private scale = 1;
   private sel: Rect | null = null;
@@ -114,7 +126,7 @@ export class AddPage implements OnInit, AfterViewInit {
       const datetime = datetimeStr ? new Date(datetimeStr) : new Date();
 
       await this.data.addEntry({
-        vehicleId: this.draft.vehicleId ?? '',
+        vehicleId: this.draft.vehicleId || undefined,
         tripId: this.draft.tripId || undefined,
         brandId: this.draft.brandId || undefined,
         fuelTypeId: this.draft.fuelTypeId || undefined,

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { DbService } from './db.service';
 import {
   Brand,
   FuelEntry,
@@ -11,176 +12,101 @@ import {
 /**
  * FuelDataService — typed seam between UI and the data layer.
  *
- * This stub implementation returns fixed in-memory data shaped exactly like
- * the future SQLite repository that the backend plan will implement.
- * UI binds to this interface only — swapping real persistence = drop-in.
+ * Drop-in replacement for the former in-memory stub: every CRUD method now delegates to
+ * `DbService` (real SQLite persistence, FR-010). UI keeps binding to this interface only.
  *
- * All methods return Promises (async) to match the SQLite repo shape.
- * NO real calculations; overview returns precomputed sample numbers.
+ * `getOverview()` REMAINS a stub — real กม./ลิตร + aggregation engine (FR-007/FR-008) is
+ * explicitly out of scope for this plan (see plan Non-goals). It must not throw even though
+ * the underlying entries now come from a real (possibly empty) database.
  */
 @Injectable({ providedIn: 'root' })
 export class FuelDataService {
 
-  // ── Seed data ──────────────────────────────────────────────────────────────
-
-  private vehicles: Vehicle[] = [
-    { id: 'v1', name: 'Toyota Corolla', licensePlate: 'กข 1234', fuelTypeId: 'ft1', createdAt: new Date('2026-01-15') },
-    { id: 'v2', name: 'Honda Jazz',     licensePlate: 'คง 5678', fuelTypeId: 'ft2', createdAt: new Date('2026-02-01') },
-  ];
-
-  private trips: Trip[] = [
-    { id: 't1', name: 'กรุงเทพ–เชียงใหม่', vehicleId: 'v1', startOdometer: 45200, createdAt: new Date('2026-05-01') },
-    { id: 't2', name: 'ทริปประจำวัน',       vehicleId: 'v2', createdAt: new Date('2026-06-01') },
-  ];
-
-  private brands: Brand[] = [
-    { id: 'b1', name: 'PTT' },
-    { id: 'b2', name: 'Shell' },
-    { id: 'b3', name: 'Esso' },
-    { id: 'b4', name: 'Bangchak' },
-    { id: 'b5', name: 'Caltex' },
-  ];
-
-  private fuelTypes: FuelType[] = [
-    { id: 'ft1', name: 'Gasohol 95' },
-    { id: 'ft2', name: 'Gasohol 91' },
-    { id: 'ft3', name: 'E20' },
-    { id: 'ft4', name: 'E85' },
-    { id: 'ft5', name: 'B7' },
-    { id: 'ft6', name: 'Hi-Diesel' },
-  ];
-
-  private entries: FuelEntry[] = [
-    {
-      id: 'e1', vehicleId: 'v1', tripId: 't1', brandId: 'b1', fuelTypeId: 'ft1',
-      liters: 35.5, pricePerLiter: 40.35, totalAmount: 1432.43,
-      odometer: 45350, station: 'PTT วิภาวดี', datetime: new Date('2026-06-28T09:15:00'),
-      createdAt: new Date('2026-06-28T09:15:00'),
-    },
-    {
-      id: 'e2', vehicleId: 'v2', tripId: 't2', brandId: 'b2', fuelTypeId: 'ft2',
-      liters: 28.0, pricePerLiter: 38.99, totalAmount: 1091.72,
-      odometer: 23100, station: 'Shell รัชดา', datetime: new Date('2026-06-25T18:30:00'),
-      createdAt: new Date('2026-06-25T18:30:00'),
-    },
-    {
-      id: 'e3', vehicleId: 'v1', tripId: 't1', brandId: 'b3', fuelTypeId: 'ft1',
-      liters: 40.0, pricePerLiter: 40.35, totalAmount: 1614.00,
-      odometer: 45680, station: 'Esso ลำปาง', note: 'เต็มถัง', datetime: new Date('2026-06-22T14:00:00'),
-      createdAt: new Date('2026-06-22T14:00:00'),
-    },
-    {
-      id: 'e4', vehicleId: 'v2', brandId: 'b1', fuelTypeId: 'ft2',
-      liters: 22.3, pricePerLiter: 38.99, totalAmount: 869.49,
-      odometer: 22850, datetime: new Date('2026-06-18T11:20:00'),
-      createdAt: new Date('2026-06-18T11:20:00'),
-    },
-    {
-      id: 'e5', vehicleId: 'v1', tripId: 't1', brandId: 'b4', fuelTypeId: 'ft1',
-      liters: 38.2, pricePerLiter: 40.35, totalAmount: 1541.37,
-      odometer: 45050, station: 'Bangchak ดอนเมือง', datetime: new Date('2026-06-15T07:45:00'),
-      createdAt: new Date('2026-06-15T07:45:00'),
-    },
-    {
-      id: 'e6', vehicleId: 'v2', tripId: 't2', brandId: 'b5', fuelTypeId: 'ft2',
-      liters: 30.5, pricePerLiter: 38.99, totalAmount: 1189.20,
-      odometer: 22600, datetime: new Date('2026-06-10T16:00:00'),
-      createdAt: new Date('2026-06-10T16:00:00'),
-    },
-  ];
+  constructor(private db: DbService) {}
 
   // ── Vehicles ───────────────────────────────────────────────────────────────
 
   async getVehicles(): Promise<Vehicle[]> {
-    return [...this.vehicles];
+    return this.db.getVehicles();
   }
 
   async addVehicle(v: Omit<Vehicle, 'id' | 'createdAt'>): Promise<Vehicle> {
-    const created: Vehicle = { ...v, id: this.uid(), createdAt: new Date() };
-    this.vehicles.push(created);
-    return created;
+    return this.db.addVehicle(v);
   }
 
-  async updateVehicle(id: string, patch: Partial<Omit<Vehicle, 'id' | 'createdAt'>>): Promise<Vehicle> {
-    const idx = this.vehicles.findIndex(v => v.id === id);
-    if (idx === -1) throw new Error('Vehicle not found');
-    this.vehicles[idx] = { ...this.vehicles[idx], ...patch };
-    return this.vehicles[idx];
+  async updateVehicle(id: number, patch: Partial<Omit<Vehicle, 'id' | 'createdAt'>>): Promise<Vehicle> {
+    return this.db.updateVehicle(id, patch);
   }
 
-  async deleteVehicle(id: string): Promise<void> {
-    this.vehicles = this.vehicles.filter(v => v.id !== id);
+  async deleteVehicle(id: number): Promise<void> {
+    return this.db.deleteVehicle(id);
   }
 
   // ── Trips ──────────────────────────────────────────────────────────────────
 
   async getTrips(): Promise<Trip[]> {
-    return [...this.trips];
+    return this.db.getTrips();
   }
 
   async addTrip(t: Omit<Trip, 'id' | 'createdAt'>): Promise<Trip> {
-    const created: Trip = { ...t, id: this.uid(), createdAt: new Date() };
-    this.trips.push(created);
-    return created;
+    return this.db.addTrip(t);
   }
 
-  async updateTrip(id: string, patch: Partial<Omit<Trip, 'id' | 'createdAt'>>): Promise<Trip> {
-    const idx = this.trips.findIndex(t => t.id === id);
-    if (idx === -1) throw new Error('Trip not found');
-    this.trips[idx] = { ...this.trips[idx], ...patch };
-    return this.trips[idx];
+  async updateTrip(id: number, patch: Partial<Omit<Trip, 'id' | 'createdAt'>>): Promise<Trip> {
+    return this.db.updateTrip(id, patch);
   }
 
-  async deleteTrip(id: string): Promise<void> {
-    this.trips = this.trips.filter(t => t.id !== id);
+  async deleteTrip(id: number): Promise<void> {
+    return this.db.deleteTrip(id);
   }
 
-  // ── Brands + FuelTypes (read-only) ────────────────────────────────────────
+  // ── Brands + FuelTypes (read-only for the app; soft-delete = data-layer capability) ────────
 
   async getBrands(): Promise<Brand[]> {
-    return [...this.brands];
+    return this.db.getBrands();
   }
 
   async getFuelTypes(): Promise<FuelType[]> {
-    return [...this.fuelTypes];
+    return this.db.getFuelTypes();
+  }
+
+  /** Unfiltered — resolves a brand even if it has been soft-hidden (SRS FR-005 AC#4). */
+  async getBrandById(id: number): Promise<Brand | null> {
+    return this.db.getBrandById(id);
+  }
+
+  /** Unfiltered — resolves a fuel type even if it has been soft-hidden (SRS FR-005 AC#4). */
+  async getFuelTypeById(id: number): Promise<FuelType | null> {
+    return this.db.getFuelTypeById(id);
   }
 
   // ── Fuel Entries ───────────────────────────────────────────────────────────
 
-  async getEntries(filter?: { vehicleId?: string; tripId?: string }): Promise<FuelEntry[]> {
-    let list = [...this.entries];
-    if (filter?.vehicleId) list = list.filter(e => e.vehicleId === filter.vehicleId);
-    if (filter?.tripId)    list = list.filter(e => e.tripId === filter.tripId);
-    // newest first
-    return list.sort((a, b) => b.datetime.getTime() - a.datetime.getTime());
+  async getEntries(filter?: { vehicleId?: number; tripId?: number }): Promise<FuelEntry[]> {
+    return this.db.getEntries(filter);
   }
 
-  async getEntry(id: string): Promise<FuelEntry | null> {
-    return this.entries.find(e => e.id === id) ?? null;
+  async getEntry(id: number): Promise<FuelEntry | null> {
+    return this.db.getEntry(id);
   }
 
   async addEntry(e: Omit<FuelEntry, 'id' | 'createdAt'>): Promise<FuelEntry> {
-    const created: FuelEntry = { ...e, id: this.uid(), createdAt: new Date() };
-    this.entries.unshift(created);
-    return created;
+    return this.db.addEntry(e);
   }
 
-  async updateEntry(id: string, patch: Partial<Omit<FuelEntry, 'id' | 'createdAt'>>): Promise<FuelEntry> {
-    const idx = this.entries.findIndex(e => e.id === id);
-    if (idx === -1) throw new Error('Entry not found');
-    this.entries[idx] = { ...this.entries[idx], ...patch };
-    return this.entries[idx];
+  async updateEntry(id: number, patch: Partial<Omit<FuelEntry, 'id' | 'createdAt'>>): Promise<FuelEntry> {
+    return this.db.updateEntry(id, patch);
   }
 
-  async deleteEntry(id: string): Promise<void> {
-    this.entries = this.entries.filter(e => e.id !== id);
+  async deleteEntry(id: number): Promise<void> {
+    return this.db.deleteEntry(id);
   }
 
   // ── Overview / Stats ───────────────────────────────────────────────────────
 
   /**
    * Returns precomputed stub overview stats for the given segment.
-   * Real calculation engine is deferred to the backend plan (Non-goal).
+   * Real calculation engine is deferred to a future plan (FR-007/FR-008 Non-goal).
    */
   async getOverview(segment: 'trip' | 'month' | 'vehicle'): Promise<OverviewStats> {
     // Fixed sample numbers — do NOT drive real calculations from these
@@ -215,11 +141,5 @@ export class FuelDataService {
     }
 
     return { segmentKey: segment, ...base, groupRows };
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  private uid(): string {
-    return Math.random().toString(36).slice(2, 10);
   }
 }

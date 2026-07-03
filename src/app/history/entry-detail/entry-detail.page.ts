@@ -31,22 +31,29 @@ export class EntryDetailPage implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) return;
+    const idParam = this.route.snapshot.paramMap.get('id');
+    const id = idParam ? Number(idParam) : NaN;
+    if (!Number.isFinite(id)) return;
     this.entry = await this.data.getEntry(id);
     if (!this.entry) return;
 
-    const [vehicles, trips, brands, fuelTypes] = await Promise.all([
+    const [vehicles, trips] = await Promise.all([
       this.data.getVehicles(),
       this.data.getTrips(),
-      this.data.getBrands(),
-      this.data.getFuelTypes(),
+    ]);
+
+    // Brand/fuel type use UNFILTERED lookups (getBrandById/getFuelTypeById) so a soft-hidden
+    // row (SRS FR-005 §Config lifecycle) still resolves its name here — history/detail must
+    // keep showing the correct name even after the row is hidden from pickers.
+    const [brand, fuelType] = await Promise.all([
+      this.entry.brandId != null ? this.data.getBrandById(this.entry.brandId) : Promise.resolve(null),
+      this.entry.fuelTypeId != null ? this.data.getFuelTypeById(this.entry.fuelTypeId) : Promise.resolve(null),
     ]);
 
     this.vehicleName = vehicles.find(v => v.id === this.entry!.vehicleId)?.name ?? '';
     this.tripName = trips.find(t => t.id === this.entry!.tripId)?.name ?? '';
-    this.brandName = brands.find(b => b.id === this.entry!.brandId)?.name ?? '';
-    this.fuelTypeName = fuelTypes.find(ft => ft.id === this.entry!.fuelTypeId)?.name ?? '';
+    this.brandName = brand?.name ?? '';
+    this.fuelTypeName = fuelType?.name ?? '';
   }
 
   openEdit() {

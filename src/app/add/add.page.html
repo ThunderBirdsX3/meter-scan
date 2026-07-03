@@ -79,10 +79,23 @@
     <div class="form-row-pair">
       <div class="form-section form-section--half">
         <ion-item class="field-item">
+          <!-- Brand logo preview (Design Addition — external brand identity, not a DS token;
+               falls back to a neutral icon if the bundled asset is missing) -->
+          <ion-avatar slot="start" class="brand-logo-avatar" *ngIf="selectedBrand?.logoAsset && !brandLogoError">
+            <img [src]="selectedBrand!.logoAsset" [alt]="selectedBrand!.name + ' โลโก้'" (error)="brandLogoError = true">
+          </ion-avatar>
+          <ion-icon
+            *ngIf="!selectedBrand?.logoAsset || brandLogoError"
+            name="business-outline"
+            slot="start"
+            aria-hidden="true"
+            class="brand-logo-fallback">
+          </ion-icon>
           <ion-label position="stacked" class="field-label">แบรนด์</ion-label>
           <ion-select
             name="brandId"
             [(ngModel)]="draft.brandId"
+            (ionChange)="brandLogoError = false"
             placeholder="เลือก"
             interface="action-sheet"
             aria-label="เลือกแบรนด์น้ำมัน">
@@ -92,6 +105,15 @@
       </div>
       <div class="form-section form-section--half">
         <ion-item class="field-item">
+          <!-- Fuel-type color chip — supplemental only, never the sole carrier of meaning
+               (fuel type name is always shown alongside — WCAG AA, plan DS Compliance) -->
+          <span
+            *ngIf="selectedFuelType?.color as ftColor"
+            slot="start"
+            class="fuel-color-dot"
+            [style.background]="ftColor"
+            aria-hidden="true">
+          </span>
           <ion-label position="stacked" class="field-label">ประเภท</ion-label>
           <ion-select
             name="fuelTypeId"

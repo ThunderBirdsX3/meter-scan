@@ -96,6 +96,34 @@
   color: var(--color-text-default);
 }
 
+// ── Brand logo / fuel-type color preview (Design Addition — external brand identity,
+// not a DS token; see plan 2026-07-02-2140-sqlite-persistence-seed §Design Additions) ────────
+.brand-logo-avatar {
+  width: var(--space-8);
+  height: var(--space-8);
+  margin-inline-end: var(--space-3);
+
+  img {
+    object-fit: contain;
+  }
+}
+
+.brand-logo-fallback {
+  font-size: var(--font-lg);
+  color: var(--color-text-muted);
+  margin-inline-end: var(--space-3);
+}
+
+.fuel-color-dot {
+  display: inline-block;
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: 50%;
+  margin-inline-end: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  flex-shrink: 0;
+}
+
 // ── Field error message ───────────────────────────────────────────────────
 .field-error {
   display: flex;

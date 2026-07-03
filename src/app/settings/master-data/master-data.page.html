@@ -12,13 +12,35 @@
   <!-- Read-only per FR-005 — no add/edit/delete UI -->
   <div class="brand-group" *ngFor="let group of brandGroups">
     <ion-list-header class="section-header">
-      <ion-label>{{ group.brand.name }}</ion-label>
+      <div class="brand-header-row">
+        <!-- Brand logo (Design Addition — external brand identity, not a DS token; falls
+             back to a neutral icon if the bundled asset is missing) -->
+        <ion-avatar class="brand-logo-avatar" *ngIf="group.brand.logoAsset && !logoErrors.has(group.brand.id)">
+          <img [src]="group.brand.logoAsset" [alt]="group.brand.name + ' โลโก้'" (error)="onLogoError(group.brand.id)">
+        </ion-avatar>
+        <ion-icon
+          *ngIf="!group.brand.logoAsset || logoErrors.has(group.brand.id)"
+          name="business-outline"
+          aria-hidden="true"
+          class="brand-logo-fallback">
+        </ion-icon>
+        <ion-label>{{ group.brand.name }}</ion-label>
+      </div>
     </ion-list-header>
 
     <ion-list lines="inset" class="master-data-list" *ngIf="group.fuelTypes.length > 0">
       <ion-item *ngFor="let ft of group.fuelTypes">
-        <ion-icon name="flask-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
-        <ion-label>{{ ft.name }}</ion-label>
+        <!-- Fuel-type color swatch — supplemental only; name (+ grade) text always present too -->
+        <span
+          class="color-swatch"
+          slot="start"
+          [style.background]="ft.color || 'var(--color-border-default)'"
+          aria-hidden="true">
+        </span>
+        <ion-label>
+          <h3>{{ ft.name }}</h3>
+          <p *ngIf="ft.grade">เกรด {{ ft.grade }}</p>
+        </ion-label>
       </ion-item>
     </ion-list>
 
@@ -35,8 +57,16 @@
 
     <ion-list lines="inset" class="master-data-list">
       <ion-item *ngFor="let ft of ungroupedFuelTypes">
-        <ion-icon name="flask-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
-        <ion-label>{{ ft.name }}</ion-label>
+        <span
+          class="color-swatch"
+          slot="start"
+          [style.background]="ft.color || 'var(--color-border-default)'"
+          aria-hidden="true">
+        </span>
+        <ion-label>
+          <h3>{{ ft.name }}</h3>
+          <p *ngIf="ft.grade">เกรด {{ ft.grade }}</p>
+        </ion-label>
       </ion-item>
     </ion-list>
   </ng-container>
