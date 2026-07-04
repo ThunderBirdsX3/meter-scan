@@ -27,22 +27,42 @@ export interface Trip {
 
 export interface Brand {
   id: number;
-  name: string;           // e.g. "PTT", "Shell", "Esso"
+  name: string;           // e.g. "PTT", "Shell"
 
   // Master-data enrich (plan 2026-07-02-2140-sqlite-persistence-seed)
-  logoAsset?: string;      // bundled logo asset path, e.g. 'src/assets/brand-logos/ptt.png'; falls back to placeholder if missing
+  logoAsset?: string;      // bundled logo asset path, e.g. 'assets/brand-logos/ptt.ico' (NO 'src/' prefix); falls back to placeholder if missing
   deletedAt?: Date;        // soft-hide (config-lifecycle capability, no user-facing UI trigger — SRS FR-005 §Config lifecycle)
 }
 
+// FuelType = brand-agnostic CANONICAL catalog (schema v2 — plan 2026-07-04-1029-brand-logo-fuel-color-assets).
+// A flag code (e.g. G95) means the same fuel regardless of which brand sells it; per-brand color /
+// marketing name live on BrandFuel below.
 export interface FuelType {
   id: number;
-  name: string;            // e.g. "E20", "B7", "Gasohol 95"
-  brandId?: number;        // FK → Brand.id
-  grade?: string;           // e.g. '95','91','E20','B7' — DDL `fuel_type.grade`
-
-  // Master-data enrich (plan 2026-07-02-2140-sqlite-persistence-seed)
-  color?: string;           // hex color string as sold by that brand; TODO real reference — see seed-data.ts
+  code: string;             // 'G91','G95','G95+','E20','E85','B95','DIESEL','DIESEL+','B20','NGV','LPG'
+  label: string;            // Thai display label, e.g. 'แก๊สโซฮอล์ 95'
+  sortOrder?: number;       // catalog display order — DDL `fuel_type.sort_order`
   deletedAt?: Date;         // soft-hide (config-lifecycle capability, no user-facing UI trigger — SRS FR-005 §Config lifecycle)
+}
+
+// BrandFuel = join row: which fuels a brand sells + the per-(brand×fuel) color/marketing override.
+export interface BrandFuel {
+  id: number;
+  brandId: number;          // FK → Brand.id
+  fuelTypeId: number;       // FK → FuelType.id (canonical)
+  color?: string;           // hex color as sold by that brand, e.g. '#0072BB' — real, reference-sourced
+  marketingName?: string;   // optional per-brand display override, e.g. 'V-Power Diesel'
+  deletedAt?: Date;         // soft-hide (config-lifecycle capability, no user-facing UI trigger — SRS FR-005 §Config lifecycle)
+}
+
+// BrandFuelOption = resolved join view for pickers (BrandFuel + its canonical code/label denormalized).
+export interface BrandFuelOption {
+  brandId: number;
+  fuelTypeId: number;
+  code: string;
+  label: string;
+  color?: string;
+  marketingName?: string;
 }
 
 export interface FuelEntry {
@@ -80,7 +100,7 @@ export interface OverviewStats {
   totalLiters: number;    // L
   fillCount: number;
   avgPricePerLiter: number; // ฿/L
-  kmPerLiter?: number;    // กม./ลิตร (stub: precomputed)
+  kmPerLiter?: number;    // กม./ลิตร — rolling tank-to-tank, sub-grouped per vehicle then summed (FR-007)
   groupRows: StatGroupRow[];
 }
 
@@ -89,4 +109,5 @@ export interface StatGroupRow {
   amount: number;
   liters: number;
   count: number;
+  kmPerLiter?: number; // กม./ลิตร of this group only; undefined if not computable (FR-008 AC4)
 }

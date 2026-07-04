@@ -1,13 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { Brand, FuelEntry, FuelType, Trip, Vehicle } from '../models/fuel-entry.model';
+import { Brand, BrandFuelOption, FuelEntry, FuelType, Trip, Vehicle } from '../models/fuel-entry.model';
 
 const DB_NAME = 'fuel_log';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
-// DDL v1 — mirrors docs/vault/70-Reference/REF-Architecture.md §3 verbatim, plus the `meta`
-// config-version guard table used by SeedService (plan Implementation Step 6).
+// DDL v1 — mirrors docs/vault/70-Reference/REF-Architecture.md §3 (historical shape). `fuel_type`
+// here is the ORIGINAL per-brand row shape; MIGRATION_V1_TO_V2 below replaces it with the
+// brand-agnostic canonical catalog (plan 2026-07-04-1029-brand-logo-fuel-color-assets). Kept
+// verbatim so the v0->v1 step of the staircase still reflects real migration history. Also
+// includes the `meta` config-version guard table used by SeedService (plan Implementation Step 6).
 const DDL_V1 = `
 CREATE TABLE IF NOT EXISTS brand (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,11 +78,46 @@ CREATE TABLE IF NOT EXISTS meta (
 );
 `;
 
+// Migration v1 -> v2 (schema refactor — plan 2026-07-04-1029-brand-logo-fuel-color-assets):
+// `fuel_type` goes from a per-brand row (brand_id/name/grade/color) to a brand-agnostic CANONICAL
+// catalog (code/label/sort_order); per-(brand×fuel) color + marketing name move to new `brand_fuel`.
+// `PRAGMA foreign_keys` must be toggled OUTSIDE this statement (SQLite refuses to change it inside
+// a transaction) — see migrate() below. Existing `fuel_entry.fuel_type_id` / `vehicle.default_
+// fuel_type_id` values point at the OLD (now-dropped) fuel_type ids and are wiped to NULL —
+// accepted (pre-release, no real installs — plan Risk R2).
+const MIGRATION_V1_TO_V2 = `
+DROP TABLE fuel_type;
+
+CREATE TABLE fuel_type (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  deleted_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE brand_fuel (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  brand_id INTEGER NOT NULL REFERENCES brand(id) ON DELETE CASCADE,
+  fuel_type_id INTEGER NOT NULL REFERENCES fuel_type(id) ON DELETE CASCADE,
+  color TEXT,
+  marketing_name TEXT,
+  deleted_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(brand_id, fuel_type_id)
+);
+
+UPDATE fuel_entry SET fuel_type_id = NULL;
+UPDATE vehicle SET default_fuel_type_id = NULL;
+`;
+
 // ── Row shapes (snake_case, as returned by SQLite) ──────────────────────────
 interface VehicleRow { id: number; name: string; plate: string | null; default_fuel_type_id: number | null; created_at: string; }
 interface TripRow { id: number; name: string; vehicle_id: number | null; start_date: string | null; note: string | null; is_active: number; ended_at: string | null; start_odometer: number | null; end_odometer: number | null; created_at: string; }
 interface BrandRow { id: number; name: string; logo_asset: string | null; deleted_at: string | null; created_at: string; }
-interface FuelTypeRow { id: number; brand_id: number; name: string; grade: string | null; color: string | null; deleted_at: string | null; created_at: string; }
+interface FuelTypeRow { id: number; code: string; label: string; sort_order: number; deleted_at: string | null; created_at: string; }
+interface BrandFuelOptionRow { brand_id: number; fuel_type_id: number; code: string; label: string; color: string | null; marketing_name: string | null; }
 interface FuelEntryRow {
   id: number; datetime: string; vehicle_id: number | null; trip_id: number | null; brand_id: number | null; fuel_type_id: number | null;
   liters: number; price_per_liter: number; amount: number; odometer_km: number | null; station: string | null; note: string | null;
@@ -121,11 +159,21 @@ function rowToBrand(r: BrandRow): Brand {
 function rowToFuelType(r: FuelTypeRow): FuelType {
   return {
     id: r.id,
-    name: r.name,
-    brandId: r.brand_id ?? undefined,
-    grade: r.grade ?? undefined,
-    color: r.color ?? undefined,
+    code: r.code,
+    label: r.label,
+    sortOrder: r.sort_order,
     deletedAt: r.deleted_at ? new Date(r.deleted_at) : undefined,
+  };
+}
+
+function rowToBrandFuelOption(r: BrandFuelOptionRow): BrandFuelOption {
+  return {
+    brandId: r.brand_id,
+    fuelTypeId: r.fuel_type_id,
+    code: r.code,
+    label: r.label,
+    color: r.color ?? undefined,
+    marketingName: r.marketing_name ?? undefined,
   };
 }
 
@@ -193,6 +241,14 @@ export class DbService {
     if (currentVersion < 1) {
       await db.execute(DDL_V1, true);
       await db.execute('PRAGMA user_version = 1;', false);
+    }
+    if (currentVersion < 2) {
+      // PRAGMA foreign_keys is a no-op inside a pending transaction — toggle OUTSIDE the
+      // transactional DDL execute() call (plan Implementation Step 3).
+      await db.execute('PRAGMA foreign_keys = OFF;', false);
+      await db.execute(MIGRATION_V1_TO_V2, true);
+      await db.execute('PRAGMA foreign_keys = ON;', false);
+      await db.execute('PRAGMA user_version = 2;', false);
     }
   }
 
@@ -307,9 +363,9 @@ export class DbService {
     return (res.values as BrandRow[] ?? []).map(rowToBrand);
   }
 
-  /** Picker source — soft-hidden rows excluded. */
+  /** Picker source — canonical catalog, soft-hidden rows excluded, in display order. */
   async getFuelTypes(): Promise<FuelType[]> {
-    const res = await this.conn().query('SELECT * FROM fuel_type WHERE deleted_at IS NULL ORDER BY id;');
+    const res = await this.conn().query('SELECT * FROM fuel_type WHERE deleted_at IS NULL ORDER BY sort_order;');
     return (res.values as FuelTypeRow[] ?? []).map(rowToFuelType);
   }
 
@@ -325,6 +381,43 @@ export class DbService {
     const res = await this.conn().query('SELECT * FROM fuel_type WHERE id = ?;', [id]);
     const row = (res.values as FuelTypeRow[] ?? [])[0];
     return row ? rowToFuelType(row) : null;
+  }
+
+  /** Which canonical fuels a brand sells + its per-brand color/marketing name (join view for pickers). */
+  async getBrandFuels(brandId: number): Promise<BrandFuelOption[]> {
+    const res = await this.conn().query(
+      `SELECT bf.brand_id as brand_id, bf.fuel_type_id as fuel_type_id, ft.code as code, ft.label as label,
+              bf.color as color, bf.marketing_name as marketing_name
+       FROM brand_fuel bf
+       JOIN fuel_type ft ON ft.id = bf.fuel_type_id
+       WHERE bf.brand_id = ? AND bf.deleted_at IS NULL AND ft.deleted_at IS NULL
+       ORDER BY ft.sort_order;`,
+      [brandId],
+    );
+    return (res.values as BrandFuelOptionRow[] ?? []).map(rowToBrandFuelOption);
+  }
+
+  /** Full brand_fuel join, unfiltered by brand — master-data grid source (plan step 9). */
+  async getAllBrandFuels(): Promise<BrandFuelOption[]> {
+    const res = await this.conn().query(
+      `SELECT bf.brand_id as brand_id, bf.fuel_type_id as fuel_type_id, ft.code as code, ft.label as label,
+              bf.color as color, bf.marketing_name as marketing_name
+       FROM brand_fuel bf
+       JOIN fuel_type ft ON ft.id = bf.fuel_type_id
+       WHERE bf.deleted_at IS NULL AND ft.deleted_at IS NULL
+       ORDER BY bf.brand_id, ft.sort_order;`,
+    );
+    return (res.values as BrandFuelOptionRow[] ?? []).map(rowToBrandFuelOption);
+  }
+
+  /** Hex color for one (brand, canonical fuel) pair, or null if that brand doesn't sell it / has no color set. */
+  async getFuelColor(brandId: number, fuelTypeId: number): Promise<string | null> {
+    const res = await this.conn().query(
+      'SELECT color FROM brand_fuel WHERE brand_id = ? AND fuel_type_id = ? AND deleted_at IS NULL;',
+      [brandId, fuelTypeId],
+    );
+    const row = (res.values as { color: string | null }[] ?? [])[0];
+    return row?.color ?? null;
   }
 
   /** Config-lifecycle capability only — no user-facing UI trigger exists yet (SRS FR-005 §Config lifecycle). */
@@ -445,15 +538,46 @@ export class DbService {
   }
 
   /** @param transaction pass `false` when called inside an outer explicit begin/commitSeedTransaction block. */
-  async seedInsertFuelType(brandId: number, name: string, grade: string | undefined, color: string, transaction = true): Promise<number> {
+  async seedInsertFuelType(code: string, label: string, sortOrder: number, transaction = true): Promise<number> {
     const res = await this.conn().run(
-      'INSERT INTO fuel_type (brand_id, name, grade, color) VALUES (?, ?, ?, ?);',
-      [brandId, name, grade ?? null, color],
+      'INSERT INTO fuel_type (code, label, sort_order) VALUES (?, ?, ?);',
+      [code, label, sortOrder],
       transaction,
     );
     const id = res.changes?.lastId;
     if (id == null) throw new Error('DB_WRITE: insert fuel_type (seed) failed');
     return id;
+  }
+
+  /** @param transaction pass `false` when called inside an outer explicit begin/commitSeedTransaction block. */
+  async seedInsertBrandFuel(
+    brandId: number,
+    fuelTypeId: number,
+    color: string | undefined,
+    marketingName: string | undefined,
+    transaction = true,
+  ): Promise<number> {
+    const res = await this.conn().run(
+      'INSERT INTO brand_fuel (brand_id, fuel_type_id, color, marketing_name) VALUES (?, ?, ?, ?);',
+      [brandId, fuelTypeId, color ?? null, marketingName ?? null],
+      transaction,
+    );
+    const id = res.changes?.lastId;
+    if (id == null) throw new Error('DB_WRITE: insert brand_fuel (seed) failed');
+    return id;
+  }
+
+  /**
+   * Wipes master-config rows for a clean reseed on `SEED_CONFIG_VERSION` mismatch (dev reset,
+   * pre-release — plan Decision #5). Deletion order (brand_fuel -> fuel_type -> brand) respects
+   * the FK dependency even though both FKs already CASCADE.
+   * @param transaction pass `false` when called inside an outer explicit begin/commitSeedTransaction block.
+   */
+  async clearMasterDataForReseed(transaction = true): Promise<void> {
+    await this.conn().execute(
+      'DELETE FROM brand_fuel; DELETE FROM fuel_type; DELETE FROM brand;',
+      transaction,
+    );
   }
 
   /**

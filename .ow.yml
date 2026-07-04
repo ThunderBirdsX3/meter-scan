@@ -62,8 +62,8 @@ commands:
 # Submodules (used by /ow-git and /ow-implement)
 # Leave empty for monorepo / single-codebase projects
 submodules:
-  - name: local-llm
-    path: ./local-llm
+  - name: local-ml
+    path: ./local-ml
     branch: main
 
 # Doc templates — single location (customize by editing files in .ow/templates/ directly)

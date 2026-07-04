@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { CameraService } from '../services/camera.service';
 import { MeterOnnxService } from '../services/meter-onnx.service';
 import { FuelDataService } from '../services/fuel-data.service';
-import { Brand, FuelEntry, FuelType, Trip, Vehicle } from '../models/fuel-entry.model';
+import { Brand, BrandFuelOption, FuelEntry, FuelType, Trip, Vehicle } from '../models/fuel-entry.model';
 
 type Rect = { x: number; y: number; w: number; h: number };
 type ScanField = { label: string; text: string; roi: Rect };
@@ -29,9 +29,15 @@ export class AddPage implements OnInit, AfterViewInit {
   vehicles: Vehicle[] = [];
   trips: Trip[] = [];
   brands: Brand[] = [];
-  fuelTypes: FuelType[] = [];
+  fuelTypes: FuelType[] = [];       // full canonical catalog — picker source when no brand selected
+  brandFuelOptions: BrandFuelOption[] = []; // selected brand's offers — picker source when a brand IS selected
   error: string | null = null;
   isSaving = false;
+
+  // tracks whether draft.fuelTypeId currently holds an auto-filled value (vs a manual pick) —
+  // auto-fill from vehicle default may overwrite ONLY while this is true or the field is empty
+  // (plan 2026-07-03-2208-vehicle-fuel-autofill, step 2/3)
+  fuelTypeAutoFilled = false;
 
   // ── Scan-assist state ─────────────────────────────────────────────────────
   scanOpen = false;
@@ -55,8 +61,20 @@ export class AddPage implements OnInit, AfterViewInit {
     return this.brands.find(b => b.id === this.draft.brandId);
   }
 
-  get selectedFuelType(): FuelType | undefined {
-    return this.fuelTypes.find(ft => ft.id === this.draft.fuelTypeId);
+  /**
+   * Fuel picker source (plan step 8): a brand's own offers (label = marketingName || label,
+   * with per-brand color) when a brand is selected; the full brand-agnostic catalog otherwise.
+   */
+  get fuelPickerOptions(): { id: number; label: string; color?: string }[] {
+    if (this.draft.brandId && this.brandFuelOptions.length > 0) {
+      return this.brandFuelOptions.map(o => ({ id: o.fuelTypeId, label: o.marketingName || o.label, color: o.color }));
+    }
+    return this.fuelTypes.map(ft => ({ id: ft.id, label: ft.label }));
+  }
+
+  /** Color dot for the currently-selected fuel option — supplemental only (plan DS Compliance). */
+  get selectedFuelColor(): string | undefined {
+    return this.fuelPickerOptions.find(o => o.id === this.draft.fuelTypeId)?.color;
   }
 
   private img: HTMLImageElement | null = null;
@@ -101,7 +119,36 @@ export class AddPage implements OnInit, AfterViewInit {
     this.vehicles = vehicles;
     this.trips = trips;
     this.brands = brands;
-    this.fuelTypes = fuelTypes;
+    this.fuelTypes = fuelTypes; // already sorted by sort_order (DbService.getFuelTypes query)
+  }
+
+  // ── Brand → fuel-offer filter (plan 2026-07-04-1029, step 8) ────────────────
+
+  /** Selecting a brand loads its brand_fuel offers to filter/re-label the fuel picker. */
+  async onBrandChange(): Promise<void> {
+    this.brandLogoError = false;
+    const brandId = this.draft.brandId;
+    this.brandFuelOptions = brandId ? await this.data.getBrandFuels(brandId) : [];
+  }
+
+  // ── Vehicle → fuel-type auto-fill (plan 2026-07-03-2208, steps 2/3/5) ───────
+
+  /**
+   * Auto-fill fuelTypeId from the selected vehicle's default ONLY when the field is empty
+   * or its current value came from a prior auto-fill — never overwrites a manual pick
+   * (plan step 2). If the vehicle has no default, the existing value is left untouched.
+   */
+  onVehicleChange() {
+    const vehicle = this.vehicles.find(v => v.id === this.draft.vehicleId);
+    if (vehicle?.fuelTypeId != null && (this.draft.fuelTypeId == null || this.fuelTypeAutoFilled === true)) {
+      this.draft.fuelTypeId = vehicle.fuelTypeId;
+      this.fuelTypeAutoFilled = true;
+    }
+  }
+
+  /** User picked a fuel type manually — auto-fill must never overwrite it again (plan step 3). */
+  onFuelTypeManualChange() {
+    this.fuelTypeAutoFilled = false;
   }
 
   // ── Form save ─────────────────────────────────────────────────────────────
@@ -149,6 +196,7 @@ export class AddPage implements OnInit, AfterViewInit {
       };
       this.scanDraftActive = false;
       this.currentImage = null;
+      this.fuelTypeAutoFilled = false;
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ';
     } finally {

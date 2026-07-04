@@ -28,47 +28,40 @@
       </div>
     </ion-list-header>
 
-    <ion-list lines="inset" class="master-data-list" *ngIf="group.fuelTypes.length > 0">
-      <ion-item *ngFor="let ft of group.fuelTypes">
-        <!-- Fuel-type color swatch — supplemental only; name (+ grade) text always present too -->
+    <ion-list lines="inset" class="master-data-list" *ngIf="group.offers.length > 0">
+      <ion-item *ngFor="let offer of group.offers">
+        <!-- Fuel-type color swatch — supplemental only; name/code text always present too -->
         <span
           class="color-swatch"
           slot="start"
-          [style.background]="ft.color || 'var(--color-border-default)'"
+          [style.background]="offer.color || 'var(--color-border-default)'"
           aria-hidden="true">
         </span>
         <ion-label>
-          <h3>{{ ft.name }}</h3>
-          <p *ngIf="ft.grade">เกรด {{ ft.grade }}</p>
+          <h3>{{ offer.marketingName || offer.label }}</h3>
+          <p>{{ offer.code }}</p>
         </ion-label>
       </ion-item>
     </ion-list>
 
-    <div class="list-empty" *ngIf="group.fuelTypes.length === 0">
+    <div class="list-empty" *ngIf="group.offers.length === 0">
       <p>ยังไม่มีประเภทน้ำมันสำหรับแบรนด์นี้</p>
     </div>
   </div>
 
-  <!-- Fuel types not linked to a brand -->
-  <ng-container *ngIf="ungroupedFuelTypes.length > 0">
-    <ion-list-header class="section-header">
-      <ion-label>ประเภทน้ำมันอื่นๆ</ion-label>
-    </ion-list-header>
+  <!-- Canonical fuel catalog — brand-agnostic flag list (schema v2); includes catalog-only
+       codes no seeded brand currently offers (e.g. LPG) -->
+  <ion-list-header class="section-header">
+    <ion-label>ประเภทน้ำมันทั้งหมด (ไม่ระบุแบรนด์)</ion-label>
+  </ion-list-header>
 
-    <ion-list lines="inset" class="master-data-list">
-      <ion-item *ngFor="let ft of ungroupedFuelTypes">
-        <span
-          class="color-swatch"
-          slot="start"
-          [style.background]="ft.color || 'var(--color-border-default)'"
-          aria-hidden="true">
-        </span>
-        <ion-label>
-          <h3>{{ ft.name }}</h3>
-          <p *ngIf="ft.grade">เกรด {{ ft.grade }}</p>
-        </ion-label>
-      </ion-item>
-    </ion-list>
-  </ng-container>
+  <ion-list lines="inset" class="master-data-list">
+    <ion-item *ngFor="let ft of catalog">
+      <ion-label>
+        <h3>{{ ft.label }}</h3>
+        <p>{{ ft.code }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
 
 </ion-content>

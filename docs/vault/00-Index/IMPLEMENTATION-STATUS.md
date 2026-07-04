@@ -1,6 +1,6 @@
 ---
 tags: [type/status]
-last_updated: 2026-07-03
+last_updated: 2026-07-04
 project: fuel-log
 phase_current: 1
 ---
@@ -39,8 +39,8 @@ phase_current: 1
 | Brand/fuel type read-only + soft-hide/logo/color (FR-005) | **built** — real SQLite-backed; picker in Add form shows brand logo + fuel-type color chip (supplemental); `/tabs/settings/master-data` shows logo + color swatch + grade; soft-delete filtered from pickers via `deleted_at IS NULL`, still resolvable via unfiltered `getBrandById()`/`getFuelTypeById()` for history; no user-facing add/edit/delete UI (unchanged) | 2026-07-02-2140 | src/app/add/, src/app/settings/master-data/, src/app/services/db.service.ts |
 | Dark mode toggle (FR-012, gap-flagged — no formal FR yet, see SRS) | **built** — 2-state light/dark toggle in Settings, persisted via Capacitor Preferences key `theme`, applied at app startup; build-verified, manual UAT pending | 2026-07-02-1526 | src/app/services/theme.service.ts, src/app/settings/ |
 | Meter scan assist UI (FR-006) | **built** — Add tab inline scan overlay; CRNN intact; autofills form as draft | 2026-06-30-1828 | src/app/add/ |
-| Odometer field + กม./ลิตร display (FR-007) | **built** (UI only) — odometer field in form; กม./ลิตร stat card in Stats; stub value | 2026-06-30-1828 | src/app/add/, src/app/stats/ |
-| Overview report UI (FR-008) | **built** — Stats tab, ion-segment trip/เดือน/รถ, 5 stat cards, breakdown rows | 2026-06-30-1828 | src/app/stats/ |
+| Odometer field + กม./ลิตร display (FR-007) | **built** — odometer field in form; กม./ลิตร stat card in Stats now computed for real via rolling tank-to-tank engine (`computeKmPerLiter`), sub-grouped per vehicle then summed (Decision D1); per-row `kmPerLiter` also real (Decision D2), `'—'` when not computable | 2026-06-30-1828 (UI); 2026-07-04-0921 (real engine) | src/app/add/, src/app/stats/, src/app/services/fuel-data.service.ts |
+| Overview report UI (FR-008) | **built** — Stats tab, ion-segment trip/เดือน/รถ, 5 stat cards, breakdown rows; `getOverview()` now a real DB aggregation (Σamount/Σliters/count/avgPricePerLiter, group by trip/month/vehicle with "ไม่ระบุทริป"/"ไม่ระบุรถ" fallback, sorted month=newest→oldest / trip,vehicle=amount desc) — no hardcoded sample numbers left | 2026-06-30-1828 (UI); 2026-07-04-0921 (real aggregation) | src/app/stats/, src/app/services/fuel-data.service.ts |
 | SQLite persistence (FR-010) | **built** — `@capacitor-community/sqlite`; `DbService` (connection, `PRAGMA user_version` migration v0→v1, parametrized+transactional CRUD, snake↔camel mapping); `FuelDataService` now a thin facade delegating to it; native-only (web/PWA out of scope per plan Non-goals); app bootstrap gates `ion-router-outlet` on `dbReady`, DB_INIT error+retry UI in `app.component` | 2026-07-02-2140 | src/app/services/db.service.ts, src/app/app.component.ts |
 | Seed bootstrap (FR-011) | **built** — `SeedService.seedIfNeeded()`, idempotent via `meta.seed_config_version` guard row, whole batch in one explicit transaction (rollback on mid-seed failure); dataset in `seed-data.ts` (8 brands, logo asset paths, grade); fuel-type color = single flagged placeholder hex (no verified real reference yet — see Risks below), NOT real brand colors | 2026-07-02-2140 | src/app/services/seed.service.ts, src/app/services/seed-data.ts |
 | ~~Amount invariant (FR-020)~~ | removed (Clarify 2026-06-29) | — | — |
@@ -51,8 +51,8 @@ phase_current: 1
 |---|---|---|
 | ion-tabs 4-tab shell | **built** | src/app/tabs/; default = Add tab |
 | DS teal/emerald retheme | **built** | src/theme/variables.scss — v2 tokens light+dark |
-| FuelDataService | **built** — real SQLite facade (was in-memory stub) | src/app/services/fuel-data.service.ts, src/app/services/db.service.ts |
-| TS entity models | **built** — all PK/FK ids `string`→`number`; Trip active-trip fields; Brand `logoAsset?`/`deletedAt?`; FuelType `grade?`/`color?`/`deletedAt?` | src/app/models/fuel-entry.model.ts |
+| FuelDataService | **built** — real SQLite facade (was in-memory stub); `getOverview()` now real aggregation + rolling กม./ลิตร engine (was fixed-number stub, see plan 2026-07-04-0921) | src/app/services/fuel-data.service.ts, src/app/services/db.service.ts |
+| TS entity models | **built** — all PK/FK ids `string`→`number`; Trip active-trip fields; Brand `logoAsset?`/`deletedAt?`; FuelType `grade?`/`color?`/`deletedAt?`; `StatGroupRow.kmPerLiter?` added (plan 2026-07-04-0921, Decision D2) | src/app/models/fuel-entry.model.ts |
 | DS a11y V1–V7 fixes | **built** | All 7 violations resolved in new + updated code |
 | Entry detail screen | **built** — brand/fuel type name resolved via unfiltered `getBrandById()`/`getFuelTypeById()` (soft-hide safe) | src/app/history/entry-detail/ |
 
@@ -71,7 +71,16 @@ phase_current: 1
 - DS components used (unchanged + reused): #4 History List Item pattern (leading thumbnail/avatar + fallback), #7 Form Field / Picker Row, #11 Modal (existing add/edit dialogs, id type only).
 - No new DS component requested/invented — logo/color use the existing avatar+swatch idiom already established by History List Item #4 (thumbnail + `onerror` placeholder).
 
+## DS Compliance (plan 2026-07-04-0921-real-stats-aggregation)
+
+- Hardcoded hex/rgb/spacing newly introduced in `stats.page.html`: 0 (grep-verified — self-audit §6)
+- No new CSS/SCSS touched — per-row กม./ลิตร text reuses the existing `.row-meta` class (List row idiom, DS Component #4/#10 family) already present in `stats.page.scss`
+- `'—'` placeholder for non-computable กม./ลิตร rendered as plain text (not color-coded) — consistent with the pre-existing top summary-card treatment (`.no-data` = opacity only, never the sole signal)
+- No new DS component requested/invented — plan's own "Design Additions: none" confirmed correct
+
 ## A11y V1–V7 resolution
+
+> ⚠️ Stale locations: `home.page.*` cited below were **deleted 2026-07-03** ([[2026-07-03-2240-delete-orphaned-home-module]]). The V1–V7 fixes remain live in `add.page`/`history.page`/`entry-detail.page` (home/ held redundant copies of the pre-fuel-log scan page). History rows kept as-is; treat `home.page.*` cells as historical.
 
 | ID | Fix | Location |
 |---|---|---|
@@ -86,7 +95,7 @@ phase_current: 1
 ## Functions implemented
 
 - Persistence layer real (DbService/SeedService) — FN specs (FN-DbService, FN-Seed, FN-FuelEntry, FN-Vehicle, FN-Trip, FN-Brand, FN-FuelType, FN-Overview per SRS §10 Traceability) still **not written** — this plan implemented the code + tests but did not author formal FN docs (no "Vault Update Checklist" section in the plan; recommend `docs` subagent pass to author them from `db.service.ts`/`seed.service.ts` + SRS FR bodies)
-- `getOverview()` remains a stub (FR-007/FR-008 real aggregation still not implemented) — unaffected by this plan, confirmed non-throwing against a real (possibly empty) DB
+- `getOverview()` real aggregation engine — **DONE** (plan 2026-07-04-0921-real-stats-aggregation): reads `DbService.getEntries()/getVehicles()/getTrips()`, groups by trip/month/vehicle (fallback labels), sums amount/liters/count, `avgPricePerLiter = Σamount÷Σliters`, and computes rolling tank-to-tank กม./ลิตร per group + overall via pure exported helper `computeKmPerLiter()` (sub-grouped per vehicle then Σdistance÷Σliters, per Decision D1). No hardcoded sample numbers remain (verified by grep). FN-Overview spec still not authored (separate docs task, unchanged from before).
 
 ## Roles defined
 
@@ -95,9 +104,10 @@ phase_current: 1
 ## Next steps
 
 - **docs**: author FN-DbService / FN-Seed / FN-FuelEntry / FN-Vehicle / FN-Trip / FN-Brand / FN-FuelType specs (SRS §10 Traceability references them; not created by this plan)
-- **Next persistence-adjacent plan**: real กม./ลิตร calc engine + overview aggregation (FR-007/FR-008) — `getOverview()` still a fixed-number stub
-- **Real fuel colors**: `seed-data.ts` uses ONE flat placeholder hex (`#9CA3AF`) for all fuel types — no verified real per-brand color reference exists yet (REF-Architecture §7 TODO). Needs a follow-up plan once real reference data is collected (do not guess — see plan Risks).
-- **Brand logo assets**: `src/assets/brand-logos/*.png` files do not exist yet (only the path convention is seeded) — UI falls back to a placeholder icon via `onerror`/`*ngIf`. Add real PNG/SVG assets when available; no code change needed, just drop files at the seeded paths.
+- ~~**Next persistence-adjacent plan**: real กม./ลิตร calc engine + overview aggregation (FR-007/FR-008) — `getOverview()` still a fixed-number stub~~ → **RESOLVED 2026-07-04** ([[2026-07-04-0921-real-stats-aggregation]]): real DB aggregation + rolling tank-to-tank กม./ลิตร engine implemented, 13 new/updated unit tests green, build EXIT=0. Manual UAT (add/edit/delete → Stats reflects change) still pending — not yet run on device/sim.
+- ~~**Real fuel colors**: `seed-data.ts` uses ONE flat placeholder hex (`#9CA3AF`) for all fuel types — no verified real per-brand color reference exists yet (REF-Architecture §7 TODO). Needs a follow-up plan once real reference data is collected (do not guess — see plan Risks).~~ → **RESOLVED 2026-07-04** ([[2026-07-04-1029-brand-logo-fuel-color-assets]]): real per-(brand×fuel) hex colors sourced from `fuel-colors-by-brand.md` reference table, wired onto the new `brand_fuel.color` column (schema v2, see note below). Zero `PLACEHOLDER_FUEL_COLOR` remaining.
+- ~~**Brand logo assets**: `src/assets/brand-logos/*.png` files do not exist yet (only the path convention is seeded) — UI falls back to a placeholder icon via `onerror`/`*ngIf`. Add real PNG/SVG assets when available; no code change needed, just drop files at the seeded paths.~~ → **RESOLVED 2026-07-04** ([[2026-07-04-1029-brand-logo-fuel-color-assets]]): 8 real `.ico` logos copied to `assets/brand-logos/<slug>.ico`; runtime path bug fixed (dropped stale `src/` prefix that always 404'd).
+- **Fuel-type data model → schema v2** (2026-07-04, [[2026-07-04-1029-brand-logo-fuel-color-assets]]): `fuel_type` is no longer per-brand — it's now a brand-agnostic **canonical flag catalog** (`code`/`label`/`sort_order`, 11 codes: G91/G95/G95+/E20/E85/B95/DIESEL/DIESEL+/B20/NGV/LPG). Per-(brand×fuel) color + optional marketing name moved to a new `brand_fuel` join table (8 brands: PTT, Bangchak, Shell, Caltex, PT, IRPC, Susco, PURE — Esso/Mobil, Sinopec, and `อื่นๆ (Other)` dropped). `user_version` v1→v2 migration wipes+reseeds master data (pre-release, no real installs). **Semantic shift**: `fuel_entry.fuel_type_id` and `vehicle.default_fuel_type_id` now reference the CANONICAL `fuel_type.id` (brand-agnostic) instead of a per-brand row — improves vehicle-default autofill (a car burns G95 regardless of station); cross-ref [[2026-07-03-2208-vehicle-fuel-autofill]]. See [[REF-Architecture]] §3/§7 for full DDL + seed model.
 - **Native smoke test still pending** (device/simulator): FR-010 AC#1 (force-quit/restart persistence), FR-011 AC#1/2 (seed + idempotency), soft-delete AC — verified by code inspection + build, NOT yet run on an actual iOS/Android device/sim (would need `ionic cap build ios|android`)
 - /ow-clarify: FLOW §9 open questions (active-trip UX, image_uri persist, center-tab name)
 - /ow-doc SRS fuel-log: FR-012 clarified 2026-07-02 (priority=P3, 2-state only, default=follow-system) — still needs GWT acceptance + FR-007 AC#1 correction (40→35 liters) written into FR bodies
@@ -105,4 +115,4 @@ phase_current: 1
 - /ow-test: settings-subpages-darkmode plan — 7 manual Test Plan items + 3 runtime-dependent Success Criteria not yet exercised (nav/back, CRUD in new sub-pages, theme persist across restart) — plan status NOT flipped to done pending this
 - /ow-test: E2E pass (Playwright) for 4-tab shell + form flows, plus new SQLite-backed flows (add entry → force-quit → reopen; soft-hide brand → history still resolves name)
 - /ow-verify: contrast re-audit light+dark tokens, touch target 44×44 check
-- **Tooling debt (pre-existing, unrelated to this plan)**: `ng lint` OOM-crashes on the whole project (`.eslintrc.json` type-aware program); `src/app/home/home.page.ts`+`.spec.ts` is orphaned dead code (not routed anywhere) referencing removed `MeterOnnxService` API (`FieldScan`, `autoReadAllFields`), which blocks `ng test` from compiling the full spec program. Recommend a small cleanup plan to delete `src/app/home/` (confirmed unrouted) and either fix the ESLint config's memory footprint or scope it to changed files in CI.
+- **Tooling debt (pre-existing, unrelated to this plan)**: `ng lint` OOM-crashes on the whole project (`.eslintrc.json` type-aware program). ~~`src/app/home/` orphaned dead code blocks `ng test` compile~~ → **RESOLVED 2026-07-03** ([[2026-07-03-2240-delete-orphaned-home-module]] / fix-log [[2026-07-03-2233-orphaned-home-blocks-karma]]): `src/app/home/` deleted (6 files), karma now compiles + runs 32/32 specs, prod build EXIT=0. Remaining: fix ESLint config memory footprint or scope it to changed files in CI.

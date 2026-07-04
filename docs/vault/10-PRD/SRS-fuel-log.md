@@ -54,6 +54,7 @@ related_functions:
   1. **Given** แอปเปิดครั้งแรกไม่มีข้อมูล, **When** ผู้ใช้กรอก liters=30, price=35, amount=1050, brand=PTT, type=แก๊สโซฮอล์ 95 แล้วบันทึก, **Then** entry ปรากฏใน list และยังอยู่หลังปิด/เปิดแอป
   2. **Given** ฟอร์มเปิดอยู่, **When** ผู้ใช้กรอก liters ติดลบ หรือเว้นทั้ง liters/price/amount, **Then** ระบบบล็อกการบันทึก + แสดง error "กรอกข้อมูลการเติมไม่ครบ"
   3. **Given** เลือก brand=PTT, **When** เปิด dropdown ประเภทน้ำมัน, **Then** เห็นเฉพาะ fuel type ของ PTT
+  4. **Given** รถ "Civic" มี `default_fuel_type_id` ตั้งไว้ (เช่น B7), **When** ผู้ใช้เลือกรถ "Civic" ในหน้าเติมน้ำมัน โดยช่องประเภทน้ำมันยังว่างอยู่ (หรือยังเป็นค่าที่ auto-fill มาจากรถคันก่อนหน้า), **Then** ช่องประเภทน้ำมันถูกตั้งเป็น B7 โดยอัตโนมัติ — ช่องยังคงแก้ไขได้เสมอ (ไม่ force/disable) และค่าที่ผู้ใช้เลือกเองแล้วจะไม่ถูก auto-fill ทับ (policy: เติมเฉพาะตอนช่องว่างหรือเป็นค่า auto เดิม — ไม่เคยทับค่าที่ผู้ใช้เลือกเอง; เพิ่มโดยแผน [[2026-07-03-2208-vehicle-fuel-autofill]])
 - **Error handling**: validation fail (amount ว่าง/ติดลบ) → inline error ใต้ field, ไม่เขียน DB; SQLite write fail → toast "บันทึกไม่สำเร็จ" + คงข้อมูลในฟอร์ม
 - **Dependencies**: FR-010 (SQLite), FR-005 (brand/type config)
 

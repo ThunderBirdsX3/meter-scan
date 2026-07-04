@@ -2,33 +2,42 @@
 
 Mobile app — photograph fuel dispenser meter, read number via on-device OCR.
 
+## READ FIRST — vault is source of truth
+Before changing or reasoning about ANY feature/behavior, read the Obsidian vault at `docs/vault/` first. It holds the authoritative spec + decisions; code follows it, not the reverse.
+- `docs/vault/10-PRD/` — PRD / SRS (functional requirements FR-xxx)
+- `docs/vault/70-Reference/` — `REF-Architecture.md` (data model, migrations, decisions), `REF-TechStack.md`, DesignSystem
+- `docs/vault/20-Features/`, `40-Functions/`, `50-Phases/`, `60-Flows/` — feature/function/phase/flow specs
+- `docs/vault/80-ImplementPlan/`, `85-FixLog/`, `90-TestPlan/`, `95-Handoff/` — plans, fix log, tests, handoffs
+- `docs/vault/00-Index/` — MOC + `IMPLEMENTATION-STATUS.md` entry points
+Design decisions live in the vault (e.g. REF-Architecture §7), NOT in agent memory. Record new decisions there.
+
 ## Stack
 - **Ionic 8** + **Angular 20** (`@angular/*` 20.3.x), **standalone: false** (NgModule pattern)
 - **Capacitor 8** — iOS + Android native
-- **Custom CRNN (ONNX)** via **onnxruntime-web** (WASM) — on-device 7-seg reader, fully offline. Trained in `local-llm/` (Tesseract.js kept as dep but no longer the engine — weak on 7-segment LCD).
+- **Custom CRNN (ONNX)** via **onnxruntime-web** (WASM) — on-device 7-seg reader, fully offline. Trained in `local-ml/` (Tesseract.js kept as dep but no longer the engine — weak on 7-segment LCD).
 - Bundle ID: `com.supasin.meterscan` (no hyphen — Android rejects hyphens in applicationId/namespace)
 
 ## Architecture
 - **Module-based** (NOT standalone components). Each page = `.page.ts` + `.module.ts` + `-routing.module.ts`.
 - `src/app/services/` — singleton services, `@Injectable({ providedIn: 'root' })`
   - `camera.service.ts` — Capacitor Camera wrapper (camera + gallery)
-  - `meter-onnx.service.ts` — CRNN ONNX reader (onnxruntime-web). Loads `assets/models/crnn.onnx`, `readField(img, roi)` → digit string. Preprocess + CTC decode ported from `local-llm/src/utils.py`.
+  - `meter-onnx.service.ts` — CRNN ONNX reader (onnxruntime-web). Loads `assets/models/crnn.onnx`, `readField(img, roi)` → digit string. Preprocess + CTC decode ported from `local-ml/src/utils.py`.
   - `ocr.service.ts` — legacy Tesseract worker (unused; kept for reference)
 - `src/app/home/` — scan page: camera/gallery → user drags ROI box on canvas → onnx readField → history
 
 ## OCR conventions (CRNN ONNX)
 - Model: `src/assets/models/crnn.onnx` (5.3MB). IO: input `image` f32 [1,1,32,128] NCHW; output `logits` f32 [1,T,12]. Charset `0123456789.`, index 0 = CTC blank.
-- Preprocess MUST match `local-llm/src/utils.py:preprocess_field` exactly: grayscale → resize 128×32 → invert → percentile(5,99) stretch → gamma 2.4 (suppresses ghost segments). No binarize/CLAHE.
+- Preprocess MUST match `local-ml/src/utils.py:preprocess_field` exactly: grayscale → resize 128×32 → invert → percentile(5,99) stretch → gamma 2.4 (suppresses ghost segments). No binarize/CLAHE.
 - onnxruntime-web: `ort.env.wasm.wasmPaths='assets/ort/'`, `numThreads=1` (webview not cross-origin-isolated). WASM in `src/assets/ort/` (ort-wasm-simd-threaded.{wasm,mjs}).
 - Localize = manual ROI (user drags box). Auto-detect (classical CV) failed; deferred until more real data.
 - `Capacitor.convertFileSrc(uri)` on the photo before drawing to canvas → keeps canvas untainted (getImageData works) on native.
-- Retrain / add photos workflow: `local-llm/docs/ADDING_DATA.md`. Re-export → copy crnn.onnx to `src/assets/models/` → `npx cap sync`.
+- Retrain / add photos workflow: `local-ml/docs/ADDING_DATA.md`. Re-export → copy crnn.onnx to `src/assets/models/` → `npx cap sync`.
 
 ## Build / run
 - `npm run build` — Angular build (output `www/`)
 - `npx cap sync` — sync web → native (run from project ROOT, not subfolder)
 - `ionic cap build ios` — opens Xcode for device deploy
-- After retraining: copy `local-llm/export/crnn.onnx` → `src/assets/models/crnn.onnx`, then build + sync
+- After retraining: copy `local-ml/export/crnn.onnx` → `src/assets/models/crnn.onnx`, then build + sync
 
 ## Native gotchas
 - Camera needs permissions: iOS `NSCameraUsageDescription` + photo keys in Info.plist; Android `CAMERA` + `READ_MEDIA_IMAGES` in AndroidManifest.xml

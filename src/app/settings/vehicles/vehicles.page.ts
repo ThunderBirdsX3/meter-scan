@@ -11,6 +11,8 @@ import { FuelType, Vehicle } from '../../models/fuel-entry.model';
 export class VehiclesPage implements OnInit {
 
   vehicles: Vehicle[] = [];
+  // Vehicle default fuel now picks from the canonical catalog (brand-agnostic, schema v2) —
+  // a car burns the same flag regardless of which brand's station it's filled at.
   fuelTypes: FuelType[] = [];
 
   // ── Vehicle modal ─────────────────────────────────────────────────────────
@@ -22,6 +24,7 @@ export class VehiclesPage implements OnInit {
 
   // ── Delete alert ──────────────────────────────────────────────────────────
   deleteVehicleAlertOpen = false;
+  deleteVehicleMessage = 'การดำเนินการนี้ไม่สามารถย้อนกลับได้';
   private deleteVehicleId: number | null = null;
   deleteVehicleButtons = [
     { text: 'ยกเลิก', role: 'cancel' },
@@ -40,7 +43,7 @@ export class VehiclesPage implements OnInit {
       this.data.getFuelTypes(),
     ]);
     this.vehicles = vehicles;
-    this.fuelTypes = fuelTypes;
+    this.fuelTypes = fuelTypes; // already sorted by sort_order (DbService.getFuelTypes query)
   }
 
   // ── Vehicle CRUD ──────────────────────────────────────────────────────────
@@ -84,8 +87,14 @@ export class VehiclesPage implements OnInit {
     }
   }
 
-  confirmDeleteVehicle(vehicle: Vehicle) {
+  async confirmDeleteVehicle(vehicle: Vehicle) {
     this.deleteVehicleId = vehicle.id;
+    // FR-003 Post-condition: warn how many entries reference this vehicle before delete
+    // (entries survive delete — ON DELETE SET NULL — plan step 8)
+    const n = (await this.data.getEntries({ vehicleId: vehicle.id })).length;
+    this.deleteVehicleMessage = n > 0
+      ? `รถนี้มี ${n} รายการเติมผูกอยู่ — ลบแล้วรายการยังอยู่แต่จะไม่ระบุรถ`
+      : 'การดำเนินการนี้ไม่สามารถย้อนกลับได้';
     this.deleteVehicleAlertOpen = true;
   }
 

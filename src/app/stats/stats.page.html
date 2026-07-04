@@ -96,10 +96,13 @@
         <ion-item
           *ngFor="let row of overview.groupRows"
           class="breakdown-item"
-          [attr.aria-label]="row.label + ': ' + (row.amount | number:'1.0-0') + ' บาท, ' + row.count + ' ครั้ง'">
+          [attr.aria-label]="row.label + ': ' + (row.amount | number:'1.0-0') + ' บาท, ' + row.count + ' ครั้ง' + (row.kmPerLiter ? ', ' + (row.kmPerLiter | number:'1.1-1') + ' กิโลเมตรต่อลิตร' : '')">
           <ion-label>
             <div class="row-name">{{ row.label }}</div>
-            <div class="row-meta">{{ row.count }} ครั้ง · {{ row.liters | number:'1.1-1' }} L</div>
+            <div class="row-meta">
+              {{ row.count }} ครั้ง · {{ row.liters | number:'1.1-1' }} L ·
+              {{ row.kmPerLiter ? (row.kmPerLiter | number:'1.1-1') + ' กม./ล.' : '—' }}
+            </div>
           </ion-label>
           <div slot="end" class="row-amount">
             {{ row.amount | number:'1.0-0' }} ฿

@@ -111,7 +111,7 @@
             placeholder="เลือก"
             interface="action-sheet"
             aria-label="เลือกประเภทน้ำมันหลักของรถ">
-            <ion-select-option *ngFor="let ft of fuelTypes" [value]="ft.id">{{ ft.name }}</ion-select-option>
+            <ion-select-option *ngFor="let ft of fuelTypes" [value]="ft.id">{{ ft.label }}</ion-select-option>
           </ion-select>
         </ion-item>
 
@@ -124,7 +124,7 @@
 <ion-alert
   [isOpen]="deleteVehicleAlertOpen"
   header="ลบรถ?"
-  message="การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+  [message]="deleteVehicleMessage"
   [buttons]="deleteVehicleButtons"
   (didDismiss)="deleteVehicleAlertOpen = false">
 </ion-alert>

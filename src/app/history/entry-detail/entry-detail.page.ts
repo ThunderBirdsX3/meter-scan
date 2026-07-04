@@ -53,7 +53,7 @@ export class EntryDetailPage implements OnInit {
     this.vehicleName = vehicles.find(v => v.id === this.entry!.vehicleId)?.name ?? '';
     this.tripName = trips.find(t => t.id === this.entry!.tripId)?.name ?? '';
     this.brandName = brand?.name ?? '';
-    this.fuelTypeName = fuelType?.name ?? '';
+    this.fuelTypeName = fuelType?.label ?? '';
   }
 
   openEdit() {

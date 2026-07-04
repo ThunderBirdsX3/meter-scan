@@ -47,6 +47,7 @@
         <ion-select
           name="vehicleId"
           [(ngModel)]="draft.vehicleId"
+          (ionChange)="onVehicleChange()"
           placeholder="เลือกรถ"
           interface="action-sheet"
           aria-label="เลือกรถ">
@@ -95,7 +96,7 @@
           <ion-select
             name="brandId"
             [(ngModel)]="draft.brandId"
-            (ionChange)="brandLogoError = false"
+            (ionChange)="onBrandChange()"
             placeholder="เลือก"
             interface="action-sheet"
             aria-label="เลือกแบรนด์น้ำมัน">
@@ -108,7 +109,7 @@
           <!-- Fuel-type color chip — supplemental only, never the sole carrier of meaning
                (fuel type name is always shown alongside — WCAG AA, plan DS Compliance) -->
           <span
-            *ngIf="selectedFuelType?.color as ftColor"
+            *ngIf="selectedFuelColor as ftColor"
             slot="start"
             class="fuel-color-dot"
             [style.background]="ftColor"
@@ -118,10 +119,11 @@
           <ion-select
             name="fuelTypeId"
             [(ngModel)]="draft.fuelTypeId"
+            (ionChange)="onFuelTypeManualChange()"
             placeholder="เลือก"
             interface="action-sheet"
             aria-label="เลือกประเภทน้ำมัน">
-            <ion-select-option *ngFor="let ft of fuelTypes" [value]="ft.id">{{ ft.name }}</ion-select-option>
+            <ion-select-option *ngFor="let opt of fuelPickerOptions" [value]="opt.id">{{ opt.label }}</ion-select-option>
           </ion-select>
         </ion-item>
       </div>

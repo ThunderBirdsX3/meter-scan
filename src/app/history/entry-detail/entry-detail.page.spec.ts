@@ -19,7 +19,7 @@ describe('EntryDetailPage', () => {
   };
 
   const hiddenBrand: Brand = { id: 3, name: 'อดีตแบรนด์', deletedAt: new Date('2026-06-01T00:00:00.000Z') };
-  const hiddenFuelType: FuelType = { id: 7, name: 'ประเภทที่ถูกซ่อน', brandId: 3, color: '#9CA3AF', deletedAt: new Date('2026-06-01T00:00:00.000Z') };
+  const hiddenFuelType: FuelType = { id: 7, code: 'DIESEL', label: 'ประเภทที่ถูกซ่อน', deletedAt: new Date('2026-06-01T00:00:00.000Z') };
 
   function setup(idParam: string | null) {
     dataSpy = jasmine.createSpyObj<FuelDataService>('FuelDataService', [
