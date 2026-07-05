@@ -10,6 +10,7 @@ related_docs:
   - "[[2026-07-02-2140-sqlite-persistence-seed]]"
   - "[[2026-07-04-1029-brand-logo-fuel-color-assets]]"
   - "[[2026-07-03-2208-vehicle-fuel-autofill]]"
+  - "[[2026-07-05-1930-vehicle-type-icons]]"
 ---
 
 # REF-Architecture — Fuel Log
@@ -96,6 +97,7 @@ CREATE TABLE vehicle (
   name TEXT NOT NULL,
   plate TEXT,
   default_fuel_type_id INTEGER REFERENCES fuel_type(id) ON DELETE SET NULL,  -- references CANONICAL fuel_type.id (brand-agnostic) — a car burns G95 regardless of station; see [[2026-07-03-2208-vehicle-fuel-autofill]]
+  vehicle_type TEXT,                  -- schema v3 (see §3 v2→v3 migration below). Nullable, enum 8 codes: motorcycle/bigbike/scooter/sedan/suv/ppv/van/truck (Thai labels — see [[SRS-fuel-log]] §5, FR-003). NULL = no icon shown.
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -139,6 +141,8 @@ CREATE INDEX idx_entry_dt ON fuel_entry(datetime);
 **Migration**: `user_version` PRAGMA เป็น schema version. `DbService` รัน migration ขั้นบันได (v0→v1 = create tables ตาม DDL ด้านบน — รวม trip active-trip fields + brand/fuel_type master-data cols). FR-010 AC#2.
 
 **v1→v2 (schema refactor — plan [[2026-07-04-1029-brand-logo-fuel-color-assets]])**: `fuel_type` เปลี่ยนจาก per-brand row (`brand_id`/`grade`/`color`) เป็น brand-agnostic canonical catalog (`code`/`label`/`sort_order`); สี+marketing name ย้ายไป table ใหม่ `brand_fuel`. Migration: toggle `PRAGMA foreign_keys` รอบขั้นตอน, `DROP TABLE fuel_type` เก่า แล้ว `CREATE TABLE fuel_type` (catalog ใหม่) + `CREATE TABLE brand_fuel`. ผลข้างเคียงที่ยอมรับ (pre-release, ไม่มี real install): ค่า `fuel_entry.fuel_type_id` และ `vehicle.default_fuel_type_id` เดิมทั้งหมดถูก wipe เป็น `NULL` (อ้างอิง fuel_type.id เก่าที่ถูก drop ไปแล้ว) — ดู plan Risk R2. หลัง migration, `fuel_entry.fuel_type_id` และ `vehicle.default_fuel_type_id` อ้างอิง **canonical** `fuel_type.id` (brand-agnostic) — รถคันหนึ่งเติม G95 เหมือนกันไม่ว่าจะที่ปั๊มไหน ปรับปรุง autofill semantics ให้ถูกต้องขึ้น (semantic shift, ดู [[2026-07-03-2208-vehicle-fuel-autofill]] Decision #1 + plan Risk R5).
+
+**v2→v3 (add vehicle_type column — plan [[2026-07-05-1930-vehicle-type-icons]])**: `ALTER TABLE vehicle ADD COLUMN vehicle_type TEXT;` (nullable, no backfill — existing rows get `NULL` = no icon shown). เพิ่ม `vehicle.vehicle_type` เพื่อรองรับ icon/type selection ให้รถแต่ละคัน (ดู [[SRS-fuel-log]] FR-003, §5). `DB_VERSION` → `3`.
 
 **กม./ลิตร (FR-007, rolling)**: aggregate ต่อกลุ่ม (รถ/เดือน/ทริป) = `(max(odometer_km) − min(odometer_km) ในกลุ่ม) / Σ liters ที่นับระยะ`; นับเฉพาะกลุ่มที่มี odometer ≥ 2 จุด. ไม่เก็บค่าใน row — derived ตอน query รายงาน.
 

@@ -73,9 +73,9 @@ export class TripsPage implements OnInit {
           name: this.tripDraft.name,
           vehicleId: this.tripDraft.vehicleId || undefined,
           startOdometer: this.tripDraft.startOdometer,
-          // This CRUD form does not manage the active-trip lifecycle (FR-004 P2 auto-tag
-          // behavior is out of scope for this plan — see FR Coverage) — new trips start inactive.
-          isActive: false,
+          // New trips are enabled by default — isActive now means "shown in the add-page
+          // trip picker" (plan 2026-07-05-1935-trip-enable-disable), not active-trip lifecycle.
+          isActive: true,
         });
       } else if (this.tripEditId) {
         await this.data.updateTrip(this.tripEditId, this.tripDraft);
@@ -85,6 +85,13 @@ export class TripsPage implements OnInit {
     } finally {
       this.tripIsSaving = false;
     }
+  }
+
+  /** Toggle enable/disable of a trip for the add-page picker — persists immediately. */
+  async onToggle(t: Trip, ev: CustomEvent) {
+    const checked = !!ev.detail.checked;
+    await this.data.updateTrip(t.id, { isActive: checked });
+    t.isActive = checked;
   }
 
   confirmDeleteTrip(trip: Trip) {

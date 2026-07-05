@@ -17,6 +17,13 @@
   font-size: var(--font-lg);
 }
 
+// ── Enable/disable toggle (plan 2026-07-05-1935-trip-enable-disable) ───────
+// Ordered before .item-actions in the end slot group + margin so it doesn't
+// crowd edit/delete buttons on narrow screens (R1).
+.enable-toggle {
+  margin-inline-end: var(--space-2);
+}
+
 // ── Inline item actions (non-swipe a11y path for edit/delete — DS #10 rule) ─
 .item-actions {
   ion-button {

@@ -2,6 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { FuelDataService } from '../../services/fuel-data.service';
 import { FuelType, Vehicle } from '../../models/fuel-entry.model';
 
+// Vehicle type catalog (schema v3 — plan 2026-07-05-1930-vehicle-type-icons). Fixed 8-entry set,
+// not DB-backed (no per-brand/user customization needed — Non-goals). `asset` is the bundled
+// monochrome SVG shown via `<ion-icon [src]>` (NOT `<img>` — `<img>` does not inherit
+// `currentColor`, breaking dark mode; plan Risk R2).
+export const VEHICLE_TYPES: { code: string; label: string; asset: string }[] = [
+  { code: 'motorcycle', label: 'จักรยานยนต์', asset: 'assets/vehicle-icons/motorcycle.svg' },
+  { code: 'bigbike', label: 'บิ๊กไบค์', asset: 'assets/vehicle-icons/bigbike.svg' },
+  { code: 'scooter', label: 'สกู๊ตเตอร์', asset: 'assets/vehicle-icons/scooter.svg' },
+  { code: 'sedan', label: 'เก๋ง', asset: 'assets/vehicle-icons/sedan.svg' },
+  { code: 'suv', label: 'SUV', asset: 'assets/vehicle-icons/suv.svg' },
+  { code: 'ppv', label: 'PPV', asset: 'assets/vehicle-icons/ppv.svg' },
+  { code: 'van', label: 'รถตู้', asset: 'assets/vehicle-icons/van.svg' },
+  { code: 'truck', label: 'รถบรรทุก', asset: 'assets/vehicle-icons/truck.svg' },
+];
+
 @Component({
   selector: 'app-vehicles',
   templateUrl: 'vehicles.page.html',
@@ -9,6 +24,8 @@ import { FuelType, Vehicle } from '../../models/fuel-entry.model';
   standalone: false,
 })
 export class VehiclesPage implements OnInit {
+
+  vehicleTypes = VEHICLE_TYPES;
 
   vehicles: Vehicle[] = [];
   // Vehicle default fuel now picks from the canonical catalog (brand-agnostic, schema v2) —
@@ -51,7 +68,7 @@ export class VehiclesPage implements OnInit {
   openVehicleModal(vehicle?: Vehicle) {
     this.vehicleModalMode = vehicle ? 'edit' : 'add';
     this.vehicleDraft = vehicle
-      ? { name: vehicle.name, licensePlate: vehicle.licensePlate, fuelTypeId: vehicle.fuelTypeId }
+      ? { name: vehicle.name, licensePlate: vehicle.licensePlate, fuelTypeId: vehicle.fuelTypeId, vehicleType: vehicle.vehicleType }
       : {};
     this.vehicleEditId = vehicle?.id ?? null;
     this.vehicleModalOpen = true;
@@ -59,6 +76,16 @@ export class VehiclesPage implements OnInit {
 
   cancelVehicleModal() {
     this.vehicleModalOpen = false;
+  }
+
+  /** Chip grid tap handler — `null` = "ไม่แสดงไอคอน" (no icon). */
+  selectVehicleType(code: string | null) {
+    this.vehicleDraft.vehicleType = code ?? undefined;
+  }
+
+  /** List icon source — asset path for the vehicle's chosen type, or null if none selected (no icon shown). */
+  iconFor(v: Vehicle): string | null {
+    return VEHICLE_TYPES.find((t) => t.code === v.vehicleType)?.asset ?? null;
   }
 
   onVehicleModalDismiss() {
@@ -76,6 +103,7 @@ export class VehiclesPage implements OnInit {
           name: this.vehicleDraft.name,
           licensePlate: this.vehicleDraft.licensePlate || undefined,
           fuelTypeId: this.vehicleDraft.fuelTypeId || undefined,
+          vehicleType: this.vehicleDraft.vehicleType || undefined,
         });
       } else if (this.vehicleEditId) {
         await this.data.updateVehicle(this.vehicleEditId, this.vehicleDraft);

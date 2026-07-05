@@ -2,7 +2,7 @@
 tags: [type/plan]
 date: 2026-07-02 15:26
 title: Settings เป็นเมนูปุ่ม → หน้าจัดการแยก (รถ/ทริป/แบรนด์) + toggle dark mode
-status: approved
+status: done
 subagent_target: mobile
 related_docs:
   - "[[FLOW-app-navigation]]"
@@ -87,25 +87,27 @@ risk_level: medium
 - "Theme toggle row" (ion-item + ion-toggle) — เช่นเดียวกัน
 
 ## Test Plan
-- [ ] Manual: หน้าตั้งค่าแสดงเมนู 3 ปุ่ม + toggle + about; ไม่มี CRUD inline
-- [ ] Manual: กดแต่ละปุ่ม → ไปหน้าที่ถูกต้อง, back กลับได้, แท็บ bar คงอยู่
-- [ ] Manual FR-003: หน้า vehicles เพิ่ม/แก้/ลบรถได้ (เท่าเดิม), delete มี confirm
-- [ ] Manual FR-004: หน้า trips เพิ่ม/แก้/ลบทริปได้ (เท่าเดิม)
-- [ ] Manual FR-005: หน้า master-data แสดง brand+fuel type อย่างเดียว ไม่มีปุ่มแก้/ลบ
-- [ ] Manual dark mode: toggle → ทั้งแอปเปลี่ยนธีมทันที; ปิด/เปิดแอปใหม่ → ธีมคงเดิม (persist)
-- [ ] Manual: เปิดแอปครั้งแรก (ไม่มี pref) → ธีม default light ไม่กระพริบ
-- [ ] Build ผ่าน (`npm run build`) + `npx cap sync` ไม่ error
+- [x] Manual: หน้าตั้งค่าแสดงเมนู 3 ปุ่ม + toggle + about; ไม่มี CRUD inline — PASS, runtime verified 2026-07-05 (iPhone 16 sim, iOS 18.5, throwaway Maestro flow `uat-01`)
+- [x] Manual: กดแต่ละปุ่ม → ไปหน้าที่ถูกต้อง, back กลับได้, แท็บ bar คงอยู่ — PASS, runtime verified 2026-07-05 (`uat-02`; Maestro edge-swipe back didn't register on this sim/Maestro combo, worked around by tapping back button's `aria-label` directly — not an app regression)
+- [x] Manual FR-003: หน้า vehicles เพิ่ม/แก้/ลบรถได้ (เท่าเดิม), delete มี confirm — PASS, runtime verified 2026-07-05 (`uat-03`)
+- [x] Manual FR-004: หน้า trips เพิ่ม/แก้/ลบทริปได้ (เท่าเดิม) — PASS, runtime verified 2026-07-05 (`uat-04`)
+- [x] Manual FR-005: หน้า master-data แสดง brand+fuel type อย่างเดียว ไม่มีปุ่มแก้/ลบ — PASS, runtime verified 2026-07-05 (screenshot + template check, zero click handlers in `master-data.page.html`)
+- [x] Manual dark mode: toggle → ทั้งแอปเปลี่ยนธีมทันที; ปิด/เปิดแอปใหม่ → ธีมคงเดิม (persist) — PASS, runtime verified 2026-07-05 (`uat-06`: Settings/History/Overview/Add all screenshotted dark; `stopApp`+relaunch confirmed persisted)
+- [x] Manual: เปิดแอปครั้งแรก (ไม่มี pref) → ธีม default light ไม่กระพริบ — PASS (steady-state only), runtime verified 2026-07-05 via `simctl uninstall`+reinstall+launch+screenshot. Caveat: single screenshot can't prove absence of a transient flash frame, only that settled state is light.
+- [x] Build ผ่าน (`npm run build`) + `npx cap sync` ไม่ error — PASS, rebuilt fresh 2026-07-05 (EXIT=0, `xcodebuild` BUILD SUCCEEDED)
 
 ## Success Criteria
 - [x] หน้า settings ไม่มี ion-modal/CRUD ของ vehicle/trip อีก (grep ยืนยัน) — เหลือเมนู + toggle (verified: grep zero matches, Phase 5.3)
-- [ ] มี 3 route ทำงาน: `/tabs/settings/vehicles`, `/tabs/settings/trips`, `/tabs/settings/master-data` (navigate + back ได้จริง) — code/build structurally confirmed (4 lazy chunks present); **runtime navigate+back ยังไม่ได้ทดสอบจริง** → รอ `/ow-test`
-- [ ] vehicle/trip CRUD ทำงานครบเท่าเดิมในหน้าใหม่ (add/edit/delete + validation ชื่อว่าง) — logic copied verbatim (code-level); **runtime ยังไม่ได้ทดสอบจริง** → รอ `/ow-test`
+- [x] มี 3 route ทำงาน: `/tabs/settings/vehicles`, `/tabs/settings/trips`, `/tabs/settings/master-data` (navigate + back ได้จริง) — **runtime verified 2026-07-05** on iPhone 16 sim (iOS 18.5), all 3 routes navigate + back correctly, tab bar stayed visible/functional throughout
+- [x] vehicle/trip CRUD ทำงานครบเท่าเดิมในหน้าใหม่ (add/edit/delete + validation ชื่อว่าง) — **runtime verified 2026-07-05**: add/edit/delete + delete-confirm dialog all PASS on both vehicles and trips sub-pages
 - [x] master-data แสดง brand+fuel type read-only (ไม่มี mutation UI) (verified: no button/click handlers in template, static code check)
-- [ ] toggle dark mode สลับธีมได้ + ค่าคงอยู่หลัง restart (Capacitor Preferences key `theme`) — implemented (code-level); **runtime toggle+restart ยังไม่ได้ทดสอบจริง** → รอ `/ow-test`
+- [x] toggle dark mode สลับธีมได้ + ค่าคงอยู่หลัง restart (Capacitor Preferences key `theme`) — **runtime verified 2026-07-05**: toggle flips whole app immediately, survives force-quit (`stopApp`) + relaunch
 - [x] `npm run build` ผ่าน, ไม่มี TS error (verified: EXIT=0, build-output.txt)
 
 ## Verification
-- map กลับ Success Criteria แต่ละข้อพร้อมผลรัน (build log, manual screenshot/บันทึกผล) ตอน `/ow-test`
+- Runtime UAT completed 2026-07-05 on iPhone 16 simulator (iOS 18.5, UDID `C983E782-59CA-432A-B52E-0AE02281951F`), dispatched via test-runner subagent. Fresh rebuild (`npm run build` → `npx cap sync ios` → `xcodebuild` Debug/simulator, EXIT=0/BUILD SUCCEEDED) + reinstall before testing.
+- Evidence: `test-artifacts/2026-07-05/uat-settings-darkmode/` — 18 screenshots, `MANIFEST.md`, `BUILD-INFO.md`, `flows/` (5 throwaway Maestro YAMLs used to drive taps). All screenshots checked for PII — synthetic fuel-log data only, `safe_to_share: true`.
+- All 8 Test Plan items + all 5 Success Criteria now PASS with real runtime evidence — no fabricated ticks. **Status flipped to `done`.**
 
 ## Risks
 - **Nested routing ในแท็บ** — sub-page ต้อง push ใน tab's ion-router-outlet ให้ back + tab bar ทำงานถูก → mitigation: ใช้ child routes ใต้ settings-routing + ทดสอบ nav จริง
@@ -116,12 +118,12 @@ risk_level: medium
 ## Approval
 - [x] Approved (set status: approved before /ow-implement)
 
-## Implementation Result (code complete — status NOT flipped to done, see below)
+## Implementation Result (code complete, status flipped to done 2026-07-05 — see Verification section)
 - Files changed (prod): `src/global.scss`, `src/app/services/theme.service.ts` (new), `src/app/app.component.ts`, `src/app/settings/settings.page.{ts,html,scss}`, `src/app/settings/settings-routing.module.ts`, `src/app/settings/vehicles/*` (new, 5 files), `src/app/settings/trips/*` (new, 5 files), `src/app/settings/master-data/*` (new, 5 files), `package.json` (+`@capacitor/preferences`)
 - Files changed (test): none — no automated test infra exists anywhere in this repo (0 `.spec.ts` files for any page, pre-existing). See §Coverage Audit below.
 - Doc gaps closed (Phase 2, before implementation): `FLOW-app-navigation` §4/§5 IA updated to sub-page nav; `SRS-fuel-log` FR-012 stub added flagging dark mode as an unreviewed post-hoc gap
 - Build: `npm run build` → ✅ EXIT=0, 0 TS errors, all 4 expected lazy chunks present (`vehicles-vehicles-module`, `trips-trips-module`, `master-data-master-data-module`, `settings-settings-module`)
 - Evidence: `test-artifacts/2026-07-02/plan-2026-07-02-1526-settings-subpages-darkmode/EVIDENCE.md` + `BUILD-INFO.md`
 - Coverage Audit (§5.2): 11 prod files / 0 test files. No untestable-reason (1–6) cleanly applies — this is real logic, not styling/config/generated/static/third-party/docs. **User was presented this gate finding directly and chose "manual-only, document gap"** over spawning a subagent to bootstrap net-new Angular test infrastructure (out of plan scope). Accepted as a known, flagged limitation.
-- **Status NOT flipped to `done`**: 6.0 open-checkbox gate requires 0 open boxes; 11 remain — all are either manual Test Plan items or Success Criteria requiring actual app runtime (nav+back, CRUD in new pages, theme persist across restart) that have not been exercised yet. Ticking them now would be fabricated evidence. Code is complete and build-verified; **remaining work is manual/smoke verification via `/ow-test`**, which should tick these boxes for real and then flip `status: done`.
+- **Status flipped to `done` 2026-07-05**: all 11 previously-open boxes (Test Plan + Success Criteria) closed with real runtime evidence via test-runner subagent on iPhone 16 simulator — see Verification section above for evidence path.
 - Subagent used: mobile (implementation) + docs (doc gaps) · Time: ~7 min combined agent runtime

@@ -21,6 +21,13 @@
         <ion-label>
           <h3>{{ t.name }}</h3>
         </ion-label>
+        <ion-toggle
+          slot="end"
+          class="enable-toggle"
+          [checked]="t.isActive"
+          (ionChange)="onToggle(t, $event)"
+          [attr.aria-label]="'เปิดใช้งาน ' + t.name">
+        </ion-toggle>
         <ion-buttons slot="end" class="item-actions">
           <ion-button fill="clear" (click)="openTripModal(t)" [attr.aria-label]="'แก้ไข ' + t.name">
             <ion-icon name="create-outline" aria-hidden="true"></ion-icon>

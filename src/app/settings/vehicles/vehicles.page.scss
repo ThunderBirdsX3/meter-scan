@@ -17,6 +17,14 @@
   font-size: var(--font-lg);
 }
 
+// ── Vehicle type icon (list) — ion-icon [src] renders inline SVG so `currentColor` (set via
+// `color` above) actually applies; an <img> would NOT inherit it (separate document context —
+// plan Risk R2, dark-mode requirement) ─────────────────────────────────────────────────────
+.vehicle-type-icon {
+  width: var(--font-lg);
+  height: var(--font-lg);
+}
+
 // ── Inline item actions (non-swipe a11y path for edit/delete — DS #10 rule) ─
 .item-actions {
   ion-button {
@@ -65,4 +73,44 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   color: var(--color-text-muted);
+}
+
+// ── Vehicle type icon-chip grid (modal) ──────────────────────────────────────
+.type-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.type-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: var(--space-16);
+  min-height: var(--space-16);
+  padding: var(--space-2);
+  background: var(--color-surface-raised);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  font-size: var(--font-2xs);
+  font-family: inherit;
+
+  ion-icon {
+    width: var(--font-lg);
+    height: var(--font-lg);
+  }
+
+  &.selected {
+    border-color: var(--color-border-focus);
+    color: var(--color-action-primary-default);
+  }
 }

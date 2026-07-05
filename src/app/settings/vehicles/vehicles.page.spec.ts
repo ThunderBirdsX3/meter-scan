@@ -75,3 +75,52 @@ describe('VehiclesPage — delete confirm entry count', () => {
     expect(page.fuelTypes[0].label).toBe('แก๊สโซฮอล์ 95');
   });
 });
+
+// Plan: 2026-07-05-1930-vehicle-type-icons — iconFor() list-icon resolution + chip selection
+describe('VehiclesPage — vehicle type icon (iconFor / selectVehicleType)', () => {
+  function setup(): VehiclesPage {
+    const dataSpy = jasmine.createSpyObj<FuelDataService>('FuelDataService', [
+      'getVehicles', 'getFuelTypes', 'getEntries', 'deleteVehicle',
+    ]);
+    dataSpy.getVehicles.and.resolveTo([]);
+    dataSpy.getFuelTypes.and.resolveTo([]);
+    dataSpy.getEntries.and.resolveTo([]);
+
+    TestBed.configureTestingModule({
+      declarations: [VehiclesPage],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      providers: [{ provide: FuelDataService, useValue: dataSpy }],
+    });
+
+    return TestBed.createComponent(VehiclesPage).componentInstance;
+  }
+
+  it('iconFor(v) returns the matching asset path when vehicleType is set', () => {
+    const page = setup();
+    const v: Vehicle = { id: 1, name: 'Fortuner', vehicleType: 'ppv', createdAt: new Date('2026-07-01') };
+    expect(page.iconFor(v)).toBe('assets/vehicle-icons/ppv.svg');
+  });
+
+  it('iconFor(v) returns null when vehicleType is unset (no icon shown in list)', () => {
+    const page = setup();
+    const v: Vehicle = { id: 2, name: 'Civic', createdAt: new Date('2026-07-01') };
+    expect(page.iconFor(v)).toBeNull();
+  });
+
+  it('iconFor(v) returns null for an unknown/stale vehicleType code', () => {
+    const page = setup();
+    const v: Vehicle = { id: 3, name: 'Old', vehicleType: 'unknown-code', createdAt: new Date('2026-07-01') };
+    expect(page.iconFor(v)).toBeNull();
+  });
+
+  it('selectVehicleType(code) sets vehicleDraft.vehicleType; selectVehicleType(null) clears it ("ไม่แสดงไอคอน")', () => {
+    const page = setup();
+    page.vehicleDraft = {};
+
+    page.selectVehicleType('sedan');
+    expect(page.vehicleDraft.vehicleType).toBe('sedan');
+
+    page.selectVehicleType(null);
+    expect(page.vehicleDraft.vehicleType).toBeUndefined();
+  });
+});

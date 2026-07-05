@@ -1,0 +1,13 @@
+appId: com.supasin.meterscan
+---
+- launchApp:
+    clearState: false
+- tapOn: "ประวัติ"
+- tapOn: ".*20.0 ลิตร.*"
+- assertVisible: "PTT"
+- takeScreenshot: entry-detail-ptt-still-resolves-after-softhide
+- back
+- tapOn: "เพิ่ม"
+- tapOn: ".*เลือกแบรนด์น้ำมัน.*"
+- assertNotVisible: "PTT"
+- takeScreenshot: add-picker-ptt-hidden

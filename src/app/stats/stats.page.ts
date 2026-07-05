@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { ViewWillEnter } from '@ionic/angular';
 import { FuelDataService } from '../services/fuel-data.service';
 import { OverviewStats } from '../models/fuel-entry.model';
 
@@ -8,13 +9,15 @@ import { OverviewStats } from '../models/fuel-entry.model';
   styleUrls: ['stats.page.scss'],
   standalone: false,
 })
-export class StatsPage implements OnInit {
+export class StatsPage implements ViewWillEnter {
   activeSegment: 'trip' | 'month' | 'vehicle' = 'trip';
   overview: OverviewStats | null = null;
 
   constructor(private data: FuelDataService) {}
 
-  async ngOnInit() {
+  // ion-tabs keeps this page instance alive across tab switches — ngOnInit fires only once, so
+  // reload here instead or the overview goes stale after CRUD elsewhere.
+  async ionViewWillEnter() {
     await this.loadOverview();
   }
 

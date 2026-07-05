@@ -76,3 +76,6 @@ test-results/
 worktrees/
 .ow-backup/
 .obsidian/workspace*
+
+!CLAUDE.md
+**/CLAUDE.md

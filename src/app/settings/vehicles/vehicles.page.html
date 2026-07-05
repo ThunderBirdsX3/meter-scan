@@ -20,7 +20,7 @@
   <ion-list lines="inset" class="vehicles-list" *ngIf="vehicles.length > 0">
     <ion-item-sliding *ngFor="let v of vehicles">
       <ion-item>
-        <ion-icon name="car-outline" slot="start" aria-hidden="true" class="item-icon"></ion-icon>
+        <ion-icon *ngIf="iconFor(v)" [src]="iconFor(v)" slot="start" aria-hidden="true" class="item-icon vehicle-type-icon"></ion-icon>
         <ion-label>
           <h3>{{ v.name }}</h3>
           <p>{{ v.licensePlate }}</p>
@@ -114,6 +114,33 @@
             <ion-select-option *ngFor="let ft of fuelTypes" [value]="ft.id">{{ ft.label }}</ion-select-option>
           </ion-select>
         </ion-item>
+
+        <div class="type-field">
+          <ion-label class="field-label" id="vehicle-type-label">ประเภทรถ</ion-label>
+          <div class="type-grid" role="group" aria-labelledby="vehicle-type-label">
+            <button
+              type="button"
+              class="type-chip"
+              [class.selected]="!vehicleDraft.vehicleType"
+              [attr.aria-pressed]="!vehicleDraft.vehicleType"
+              aria-label="ไม่แสดงไอคอน"
+              (click)="selectVehicleType(null)">
+              <ion-icon name="ban-outline" aria-hidden="true"></ion-icon>
+              <span>ไม่แสดงไอคอน</span>
+            </button>
+            <button
+              type="button"
+              *ngFor="let t of vehicleTypes"
+              class="type-chip"
+              [class.selected]="vehicleDraft.vehicleType === t.code"
+              [attr.aria-pressed]="vehicleDraft.vehicleType === t.code"
+              [attr.aria-label]="t.label"
+              (click)="selectVehicleType(t.code)">
+              <ion-icon [src]="t.asset" aria-hidden="true"></ion-icon>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
 
       </div>
     </ion-content>

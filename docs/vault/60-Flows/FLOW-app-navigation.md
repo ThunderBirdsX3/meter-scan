@@ -55,13 +55,11 @@ flowchart TD
   T3 -->|edit| EDITF[Edit entry form]
   T4 -->|กดเมนู| VEH["/tabs/settings/vehicles — Vehicle CRUD"]
   T4 -->|กดเมนู| TRIP["/tabs/settings/trips — Trip CRUD"]
-  T4 -->|กดเมนู| MASTER["/tabs/settings/master-data — Brand/FuelType (read-only)"]
   VEH -->|back| T4
   TRIP -->|back| T4
-  MASTER -->|back| T4
 ```
 
-> **หมายเหตุ IA (อัปเดต 2026-07-02, plan `[[2026-07-02-1526-settings-subpages-darkmode]]`):** VEH/TRIP/MASTER เป็น **nested child route** ใต้แท็บ Settings (`/tabs/settings/*`) ไม่ใช่แท็บระดับบนสุด — กดปุ่มในหน้า Settings แล้ว push เข้า sub-page, **tab bar ยังแสดงอยู่**, กด back กลับมาหน้าเมนู Settings (T4) ได้ตามปกติ. หน้า Settings เองไม่มี CRUD inline อีกต่อไป — ดู §5.
+> **หมายเหตุ IA (อัปเดต 2026-07-05, plan `[[2026-07-05-1940-settings-cleanup]]`):** VEH/TRIP เป็น **nested child route** ใต้แท็บ Settings (`/tabs/settings/*`) ไม่ใช่แท็บระดับบนสุด — กดปุ่มในหน้า Settings แล้ว push เข้า sub-page, **tab bar ยังแสดงอยู่**, กด back กลับมาหน้าเมนู Settings (T4) ได้ตามปกติ. หน้า Settings เองไม่มี CRUD inline อีกต่อไป — ดู §5. เดิมมี route `/tabs/settings/master-data` (Brand/FuelType read-only view) ด้วย แต่ถูกลบทิ้งทั้งหมด (plan `[[2026-07-05-1940-settings-cleanup]]`) — brand/fuel type ยังใช้เป็น seed/picker data source ในฟอร์มเพิ่มรายการ (ดู [[SRS-fuel-log]] FR-005) เพียงแต่ไม่มีหน้า UI ให้ดูแยกอีกต่อไป.
 
 ### ลำดับแท็บใน bar (ซ้าย→ขวา)
 
@@ -101,9 +99,8 @@ flowchart TD
 - หน้า Settings เอง = รายการปุ่มเมนู (ion-item + navigate), ไม่มี ion-modal/CRUD inline อีกต่อไป; กดปุ่ม → push sub-page ใน tab's route (`/tabs/settings/...`), tab bar ยังอยู่, back กลับหน้าเมนูได้
 - **รถของฉัน** → `/tabs/settings/vehicles`: Vehicle CRUD เต็มรูปแบบ (list + add/edit modal + delete confirm) (FR-003) — ย้าย logic มาจากหน้า settings เดิม
 - **ทริป** → `/tabs/settings/trips`: Trip CRUD + ผูก entry (FR-004) — list ทริป, สร้าง/แก้/ลบ, ดู summary ราย trip — ย้าย logic มาจากหน้า settings เดิม
-- **แบรนด์และประเภทน้ำมัน** → `/tabs/settings/master-data`: ดูอย่างเดียว (master config read-only, FR-005) — ไม่มีปุ่มแก้/ลบ
 - **การแสดงผล** (section ใหม่ อยู่ในหน้า Settings เอง — ไม่ใช่ sub-page แยก): toggle dark mode แบบ 2-state (สว่าง/มืด), persist ผ่าน Capacitor Preferences (key `theme`), apply ตอน app start — *ยังไม่มี FR รองรับใน [[SRS-fuel-log]], ดู §9 Doc gaps*
-- Export ข้อมูล, ล้างข้อมูล (confirm), about/เวอร์ชัน, สถานะ seed (FR-011) — ยังอยู่ในหน้า Settings เอง (ไม่ย้าย)
+- about/เวอร์ชัน, สถานะ seed (FR-011) — ยังอยู่ในหน้า Settings เอง (ไม่ย้าย). (Export ข้อมูล/ล้างข้อมูล placeholder และเมนู "แบรนด์และประเภทน้ำมัน" → `/tabs/settings/master-data` ถูกลบทิ้งทั้งหมด — plan `[[2026-07-05-1940-settings-cleanup]]`; brand/fuel type ยังใช้เป็น seed/picker data source ใน [[SRS-fuel-log]] FR-005 ผ่านฟอร์มเพิ่มรายการเท่านั้น ไม่มีหน้า UI ให้ดูแยกอีกต่อไป)
 
 ## 6. Post-conditions / Success
 

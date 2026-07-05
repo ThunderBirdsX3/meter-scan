@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
+import { ViewWillEnter } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
 import { CameraService } from '../services/camera.service';
 import { MeterOnnxService } from '../services/meter-onnx.service';
@@ -21,11 +22,13 @@ const FIELD_PALETTE = [
   styleUrls: ['add.page.scss'],
   standalone: false,
 })
-export class AddPage implements OnInit, AfterViewInit {
+export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
   @ViewChild('canvas') canvasRef?: ElementRef<HTMLCanvasElement>;
 
   // ── Form state ────────────────────────────────────────────────────────────
-  draft: Partial<FuelEntry> = { datetime: new Date() };
+  // datetimeLocal = UI-only string for the datetime-local input (YYYY-MM-DDTHH:mm);
+  // draft.datetime (Date) is the persisted value, derived from it on save.
+  draft: Partial<FuelEntry> & { datetimeLocal?: string } = { datetime: new Date() };
   vehicles: Vehicle[] = [];
   trips: Trip[] = [];
   brands: Brand[] = [];
@@ -92,8 +95,15 @@ export class AddPage implements OnInit, AfterViewInit {
   ngOnInit() {
     // Reduced motion check (V7)
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
 
-    // Reset draft datetime to now on each activation
+  /**
+   * ion-tabs keeps this page instance alive across tab switches — ngOnInit fires only once, so
+   * picker sources (vehicles/trips/brands/fuelTypes) and the draft datetime must reset here
+   * instead, or they go stale after CRUD elsewhere (e.g. adding a vehicle in Settings) until the
+   * app is restarted.
+   */
+  ionViewWillEnter() {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     // datetime-local value format: YYYY-MM-DDTHH:mm
@@ -117,7 +127,9 @@ export class AddPage implements OnInit, AfterViewInit {
       this.data.getFuelTypes(),
     ]);
     this.vehicles = vehicles;
-    this.trips = trips;
+    // Only enabled trips appear in the add-page picker (plan 2026-07-05-1935-trip-enable-disable);
+    // disabled trips stay in Settings > Trips but are hidden here.
+    this.trips = trips.filter(t => t.isActive);
     this.brands = brands;
     this.fuelTypes = fuelTypes; // already sorted by sort_order (DbService.getFuelTypes query)
   }

@@ -1,0 +1,20 @@
+appId: com.supasin.meterscan
+---
+- launchApp:
+    clearState: false
+- assertVisible: "เพิ่มการเติมน้ำมัน"
+- tapOn: ".*เลือกรถ.*"
+- tapOn: ".*E2E Test Car.*"
+- tapOn: "จำนวนลิตร"
+- inputText: "35"
+- tapOn: "กรอกอย่างน้อย 1 ในสามฟิลด์ด้านล่าง"
+- tapOn: "ราคาต่อลิตร"
+- inputText: "32.5"
+- tapOn: "กรอกอย่างน้อย 1 ในสามฟิลด์ด้านล่าง"
+- scrollUntilVisible:
+    element: "บันทึกการเติมน้ำมัน"
+    direction: DOWN
+- tapOn: "บันทึกการเติมน้ำมัน"
+- tapOn: "ประวัติ"
+- assertVisible: ".*35.*ลิตร.*"
+- takeScreenshot: history-after-add

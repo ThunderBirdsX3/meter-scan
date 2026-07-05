@@ -27,7 +27,7 @@
         <ion-input
           name="datetime"
           type="datetime-local"
-          [(ngModel)]="draft.datetime"
+          [(ngModel)]="draft.datetimeLocal"
           #datetimeCtrl="ngModel"
           required
           [attr.aria-invalid]="datetimeCtrl.invalid && datetimeCtrl.touched ? 'true' : null"
@@ -40,21 +40,107 @@
       </div>
     </div>
 
-    <!-- ── Vehicle picker ─────────────────────────────────────────────────── -->
+    <!-- ── Scan-assist entry ──────────────────────────────────────────────── -->
+    <div class="scan-assist-section">
+      <p class="scan-hint">สแกนหน้าจอมิเตอร์เพื่อกรอกข้อมูลอัตโนมัติ</p>
+      <ion-button
+        fill="outline"
+        expand="block"
+        (click)="openScanAssist()"
+        [disabled]="isSaving"
+        aria-label="เปิดกล้องสแกนมิเตอร์">
+        <ion-icon name="scan-outline" slot="start" aria-hidden="true"></ion-icon>
+        สแกนช่วยกรอก
+      </ion-button>
+    </div>
+
+    <!-- ── 3 independent numeric fields (FR-001) ─────────────────────────── -->
+    <p class="section-hint">กรอกอย่างน้อย 1 ในสามฟิลด์ด้านล่าง</p>
+
+    <div class="form-row-triple">
+      <!-- Total amount -->
+      <div class="form-section form-section--third">
+        <ion-item class="field-item numeric-item"
+                  [class.ion-invalid]="amountCtrl.invalid && amountCtrl.touched">
+          <ion-label position="stacked" class="field-label">฿ รวม</ion-label>
+          <ion-input
+            name="totalAmount"
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="draft.totalAmount"
+            #amountCtrl="ngModel"
+            min="0"
+            [attr.aria-invalid]="amountCtrl.invalid && amountCtrl.touched ? 'true' : null"
+            aria-describedby="amount-err"
+            aria-label="ยอดรวมเป็นบาท"
+            class="numeric-input">
+          </ion-input>
+        </ion-item>
+        <div id="amount-err" class="field-error" *ngIf="amountCtrl.invalid && amountCtrl.touched">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
+        </div>
+      </div>
+
+      <!-- Liters -->
+      <div class="form-section form-section--third">
+        <ion-item class="field-item numeric-item"
+                  [class.ion-invalid]="litersCtrl.invalid && litersCtrl.touched">
+          <ion-label position="stacked" class="field-label">ลิตร</ion-label>
+          <ion-input
+            name="liters"
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="draft.liters"
+            #litersCtrl="ngModel"
+            min="0"
+            [attr.aria-invalid]="litersCtrl.invalid && litersCtrl.touched ? 'true' : null"
+            aria-describedby="liters-err"
+            aria-label="จำนวนลิตร"
+            class="numeric-input">
+          </ion-input>
+        </ion-item>
+        <div id="liters-err" class="field-error" *ngIf="litersCtrl.invalid && litersCtrl.touched">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
+        </div>
+      </div>
+
+      <!-- Price/L -->
+      <div class="form-section form-section--third">
+        <ion-item class="field-item numeric-item"
+                  [class.ion-invalid]="priceCtrl.invalid && priceCtrl.touched">
+          <ion-label position="stacked" class="field-label">฿/ลิตร</ion-label>
+          <ion-input
+            name="pricePerLiter"
+            type="number"
+            inputmode="decimal"
+            [(ngModel)]="draft.pricePerLiter"
+            #priceCtrl="ngModel"
+            min="0"
+            [attr.aria-invalid]="priceCtrl.invalid && priceCtrl.touched ? 'true' : null"
+            aria-describedby="price-err"
+            aria-label="ราคาต่อลิตร"
+            class="numeric-input">
+          </ion-input>
+        </ion-item>
+        <div id="price-err" class="field-error" *ngIf="priceCtrl.invalid && priceCtrl.touched">
+          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Odometer ───────────────────────────────────────────────────────── -->
     <div class="form-section">
       <ion-item class="field-item">
-        <ion-label position="stacked" class="field-label">รถ</ion-label>
-        <ion-select
-          name="vehicleId"
-          [(ngModel)]="draft.vehicleId"
-          (ionChange)="onVehicleChange()"
-          placeholder="เลือกรถ"
-          interface="action-sheet"
-          aria-label="เลือกรถ">
-          <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
-            {{ v.name }} ({{ v.licensePlate }})
-          </ion-select-option>
-        </ion-select>
+        <ion-label position="stacked" class="field-label">เลขไมล์ (กม.)</ion-label>
+        <ion-input
+          name="odometer"
+          type="number"
+          inputmode="decimal"
+          [(ngModel)]="draft.odometer"
+          min="0"
+          aria-label="เลขไมล์ในหน่วยกิโลเมตร"
+          class="numeric-input">
+        </ion-input>
       </ion-item>
     </div>
 
@@ -71,6 +157,24 @@
           <ion-select-option value="">— ไม่ระบุ —</ion-select-option>
           <ion-select-option *ngFor="let t of trips" [value]="t.id">
             {{ t.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    <!-- ── Vehicle picker ─────────────────────────────────────────────────── -->
+    <div class="form-section">
+      <ion-item class="field-item">
+        <ion-label position="stacked" class="field-label">รถ</ion-label>
+        <ion-select
+          name="vehicleId"
+          [(ngModel)]="draft.vehicleId"
+          (ionChange)="onVehicleChange()"
+          placeholder="เลือกรถ"
+          interface="action-sheet"
+          aria-label="เลือกรถ">
+          <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
+            {{ v.name }} ({{ v.licensePlate }})
           </ion-select-option>
         </ion-select>
       </ion-item>
@@ -129,96 +233,6 @@
       </div>
     </div>
 
-    <!-- ── 3 independent numeric fields (FR-001) ─────────────────────────── -->
-    <p class="section-hint">กรอกอย่างน้อย 1 ในสามฟิลด์ด้านล่าง</p>
-
-    <div class="form-row-triple">
-      <!-- Liters -->
-      <div class="form-section form-section--third">
-        <ion-item class="field-item numeric-item"
-                  [class.ion-invalid]="litersCtrl.invalid && litersCtrl.touched">
-          <ion-label position="stacked" class="field-label">ลิตร</ion-label>
-          <ion-input
-            name="liters"
-            type="number"
-            inputmode="decimal"
-            [(ngModel)]="draft.liters"
-            #litersCtrl="ngModel"
-            min="0"
-            [attr.aria-invalid]="litersCtrl.invalid && litersCtrl.touched ? 'true' : null"
-            aria-describedby="liters-err"
-            aria-label="จำนวนลิตร"
-            class="numeric-input">
-          </ion-input>
-        </ion-item>
-        <div id="liters-err" class="field-error" *ngIf="litersCtrl.invalid && litersCtrl.touched">
-          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
-        </div>
-      </div>
-
-      <!-- Price/L -->
-      <div class="form-section form-section--third">
-        <ion-item class="field-item numeric-item"
-                  [class.ion-invalid]="priceCtrl.invalid && priceCtrl.touched">
-          <ion-label position="stacked" class="field-label">฿/ลิตร</ion-label>
-          <ion-input
-            name="pricePerLiter"
-            type="number"
-            inputmode="decimal"
-            [(ngModel)]="draft.pricePerLiter"
-            #priceCtrl="ngModel"
-            min="0"
-            [attr.aria-invalid]="priceCtrl.invalid && priceCtrl.touched ? 'true' : null"
-            aria-describedby="price-err"
-            aria-label="ราคาต่อลิตร"
-            class="numeric-input">
-          </ion-input>
-        </ion-item>
-        <div id="price-err" class="field-error" *ngIf="priceCtrl.invalid && priceCtrl.touched">
-          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
-        </div>
-      </div>
-
-      <!-- Total amount -->
-      <div class="form-section form-section--third">
-        <ion-item class="field-item numeric-item"
-                  [class.ion-invalid]="amountCtrl.invalid && amountCtrl.touched">
-          <ion-label position="stacked" class="field-label">฿ รวม</ion-label>
-          <ion-input
-            name="totalAmount"
-            type="number"
-            inputmode="decimal"
-            [(ngModel)]="draft.totalAmount"
-            #amountCtrl="ngModel"
-            min="0"
-            [attr.aria-invalid]="amountCtrl.invalid && amountCtrl.touched ? 'true' : null"
-            aria-describedby="amount-err"
-            aria-label="ยอดรวมเป็นบาท"
-            class="numeric-input">
-          </ion-input>
-        </ion-item>
-        <div id="amount-err" class="field-error" *ngIf="amountCtrl.invalid && amountCtrl.touched">
-          <ion-icon name="alert-circle" aria-hidden="true"></ion-icon> ค่าไม่ถูกต้อง
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Odometer ───────────────────────────────────────────────────────── -->
-    <div class="form-section">
-      <ion-item class="field-item">
-        <ion-label position="stacked" class="field-label">เลขไมล์ (กม.)</ion-label>
-        <ion-input
-          name="odometer"
-          type="number"
-          inputmode="decimal"
-          [(ngModel)]="draft.odometer"
-          min="0"
-          aria-label="เลขไมล์ในหน่วยกิโลเมตร"
-          class="numeric-input">
-        </ion-input>
-      </ion-item>
-    </div>
-
     <!-- ── Station ────────────────────────────────────────────────────────── -->
     <div class="form-section">
       <ion-item class="field-item">
@@ -245,20 +259,6 @@
           aria-label="หมายเหตุเพิ่มเติม">
         </ion-input>
       </ion-item>
-    </div>
-
-    <!-- ── Scan-assist entry ──────────────────────────────────────────────── -->
-    <div class="scan-assist-section">
-      <p class="scan-hint">สแกนหน้าจอมิเตอร์เพื่อกรอกข้อมูลอัตโนมัติ</p>
-      <ion-button
-        fill="outline"
-        expand="block"
-        (click)="openScanAssist()"
-        [disabled]="isSaving"
-        aria-label="เปิดกล้องสแกนมิเตอร์">
-        <ion-icon name="scan-outline" slot="start" aria-hidden="true"></ion-icon>
-        สแกนช่วยกรอก
-      </ion-button>
     </div>
 
     <!-- ── Submit ─────────────────────────────────────────────────────────── -->

@@ -9,6 +9,7 @@ export interface Vehicle {
   name: string;          // e.g. "Toyota Corolla"
   licensePlate?: string;  // maps to DDL column `plate` (Doc Gap #3/#4 — model field name kept, DbService maps the name)
   fuelTypeId?: number;    // maps to DDL column `default_fuel_type_id`; FK → FuelType.id (nullable)
+  vehicleType?: string;   // enum code (see VEHICLE_TYPES, vehicles.page.ts) — maps DDL column `vehicle_type` (schema v3, nullable — plan 2026-07-05-1930-vehicle-type-icons)
   createdAt: Date;
 }
 
@@ -19,7 +20,9 @@ export interface Trip {
   startOdometer?: number;
   createdAt: Date;
 
-  // Active-trip lifecycle (SRS Clarify 2026-06-30 Q1 / Doc Gap #2)
+  // Enable/disable flag for the add-page trip picker (repurposed from the original
+  // active-trip-lifecycle intent — see plan 2026-07-05-1935-trip-enable-disable).
+  // true = shown in add.page trip picker; false = hidden but not deleted.
   isActive: boolean;
   endedAt?: Date;
   endOdometer?: number;

@@ -5,7 +5,7 @@ status: active
 derived_from: src/theme/variables.scss (empty → Ionic 8 default palette), src/global.scss, src/app/home/home.page.scss
 theme_modes: [light, dark]  # dark via @ionic/angular/css/palettes/dark.system.css
 contrast_standard: WCAG 2.2 AA
-last_updated: 2026-06-30
+last_updated: 2026-07-05
 retheme_note: "v2 — primary/accent retheme blue → teal (primary) + emerald (accent), clean-fintech-tracker palette. Functional success/warning/danger unchanged. Blue primitives removed (no longer referenced)."
 ---
 
@@ -220,3 +220,7 @@ Ionic 8 defaults. Hardcoded values found in `home.page.scss` (`#2dd36f`, `#000`,
 > = 3.74:1 vs white FAILed 4.5). Dark primary uses **teal-500** because dark inverse text is dark
 > (#222428) — a darker teal would fail. Accent text use → **emerald-700** (emerald-600 = 3.77:1
 > FAILs as text, kept for non-text border only).
+
+**Re-verified 2026-07-05** against current `src/theme/variables.scss` (post v2 retheme, `.ion-palette-dark` class-based) — all pairs above still PASS, no regression. Also checked `text-danger`/`surface-danger` in both modes (light 5.28:1, dark 5.86:1, both PASS) and `text-muted`/`surface-sunken`/`surface-raised` variants (light 5.86:1, dark 6.38:1, both PASS).
+
+**Touch target 44×44 check (2026-07-05):** grepped all `src/app/**/*.scss` for explicit sub-44px `height`/`width`/`min-height`/`min-width` on interactive elements — zero matches. Only sub-44px sized node in the codebase is a decorative, non-interactive `::before` tab-indicator bar (24×3px, `tabs.page.scss` line 24-34) — not a tap target. All real interactive elements (`ion-button`, `ion-item`, `ion-tab-button`, `ion-fab-button`) rely on unmodified Ionic defaults (≥44px). PASS.

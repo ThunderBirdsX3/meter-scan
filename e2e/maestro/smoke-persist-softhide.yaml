@@ -1,0 +1,17 @@
+appId: com.supasin.meterscan
+---
+- launchApp:
+    clearState: false
+- tapOn: "ประวัติ"
+- tapOn: ".*20.0 ลิตร.*"
+- assertVisible: "PTT"
+- takeScreenshot: entry-detail-with-ptt-brand
+- back
+- stopApp
+- launchApp:
+    clearState: false
+- tapOn: "ประวัติ"
+- assertVisible: ".*20.0 ลิตร.*"
+- tapOn: ".*20.0 ลิตร.*"
+- assertVisible: "PTT"
+- takeScreenshot: entry-detail-after-relaunch-persist

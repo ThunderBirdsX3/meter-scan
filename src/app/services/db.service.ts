@@ -4,7 +4,7 @@ import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacito
 import { Brand, BrandFuelOption, FuelEntry, FuelType, Trip, Vehicle } from '../models/fuel-entry.model';
 
 const DB_NAME = 'fuel_log';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 // DDL v1 — mirrors docs/vault/70-Reference/REF-Architecture.md §3 (historical shape). `fuel_type`
 // here is the ORIGINAL per-brand row shape; MIGRATION_V1_TO_V2 below replaces it with the
@@ -112,8 +112,16 @@ UPDATE fuel_entry SET fuel_type_id = NULL;
 UPDATE vehicle SET default_fuel_type_id = NULL;
 `;
 
+// Migration v2 -> v3 (plan 2026-07-05-1930-vehicle-type-icons): add nullable `vehicle_type`
+// column to `vehicle` — enum code (see VEHICLE_TYPES, vehicles.page.ts) driving the icon shown
+// in the vehicle list. SQLite ADD COLUMN does not rewrite the table, so this is safe to run
+// inside a transaction without toggling PRAGMA foreign_keys (plan Risk R1).
+const MIGRATION_V2_TO_V3 = `
+ALTER TABLE vehicle ADD COLUMN vehicle_type TEXT;
+`;
+
 // ── Row shapes (snake_case, as returned by SQLite) ──────────────────────────
-interface VehicleRow { id: number; name: string; plate: string | null; default_fuel_type_id: number | null; created_at: string; }
+interface VehicleRow { id: number; name: string; plate: string | null; default_fuel_type_id: number | null; vehicle_type: string | null; created_at: string; }
 interface TripRow { id: number; name: string; vehicle_id: number | null; start_date: string | null; note: string | null; is_active: number; ended_at: string | null; start_odometer: number | null; end_odometer: number | null; created_at: string; }
 interface BrandRow { id: number; name: string; logo_asset: string | null; deleted_at: string | null; created_at: string; }
 interface FuelTypeRow { id: number; code: string; label: string; sort_order: number; deleted_at: string | null; created_at: string; }
@@ -130,6 +138,7 @@ function rowToVehicle(r: VehicleRow): Vehicle {
     name: r.name,
     licensePlate: r.plate ?? undefined,
     fuelTypeId: r.default_fuel_type_id ?? undefined,
+    vehicleType: r.vehicle_type ?? undefined,
     createdAt: new Date(r.created_at),
   };
 }
@@ -250,6 +259,11 @@ export class DbService {
       await db.execute('PRAGMA foreign_keys = ON;', false);
       await db.execute('PRAGMA user_version = 2;', false);
     }
+    if (currentVersion < 3) {
+      // Plain ADD COLUMN — safe inside a transaction, no FK toggle needed (plan Risk R1).
+      await db.execute(MIGRATION_V2_TO_V3, true);
+      await db.execute('PRAGMA user_version = 3;', false);
+    }
   }
 
   private conn(): SQLiteDBConnection {
@@ -266,8 +280,8 @@ export class DbService {
 
   async addVehicle(v: Omit<Vehicle, 'id' | 'createdAt'>): Promise<Vehicle> {
     const res = await this.conn().run(
-      'INSERT INTO vehicle (name, plate, default_fuel_type_id) VALUES (?, ?, ?);',
-      [v.name, v.licensePlate ?? null, v.fuelTypeId ?? null],
+      'INSERT INTO vehicle (name, plate, default_fuel_type_id, vehicle_type) VALUES (?, ?, ?, ?);',
+      [v.name, v.licensePlate ?? null, v.fuelTypeId ?? null, v.vehicleType ?? null],
     );
     const id = res.changes?.lastId;
     if (id == null) throw new Error('DB_WRITE: insert vehicle failed');
@@ -282,6 +296,7 @@ export class DbService {
     if ('name' in patch) { sets.push('name = ?'); values.push(patch.name); }
     if ('licensePlate' in patch) { sets.push('plate = ?'); values.push(patch.licensePlate ?? null); }
     if ('fuelTypeId' in patch) { sets.push('default_fuel_type_id = ?'); values.push(patch.fuelTypeId ?? null); }
+    if ('vehicleType' in patch) { sets.push('vehicle_type = ?'); values.push(patch.vehicleType ?? null); }
     if (sets.length > 0) {
       values.push(id);
       await this.conn().run(`UPDATE vehicle SET ${sets.join(', ')} WHERE id = ?;`, values);

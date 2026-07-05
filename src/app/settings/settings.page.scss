@@ -30,14 +30,4 @@
 .item-icon {
   color: var(--color-text-muted);
   font-size: var(--font-lg);
-
-  &--danger {
-    color: var(--color-text-danger);
-  }
-}
-
-// ── Placeholder note ──────────────────────────────────────────────────────
-.placeholder-note {
-  font-size: var(--font-xs);
-  color: var(--color-text-muted);
 }

@@ -83,6 +83,15 @@ describe('DbService', () => {
       expect(sql).toContain('UPDATE vehicle SET default_fuel_type_id = NULL');
     });
 
+    it('v2->v3 migration: ALTER TABLE vehicle ADD COLUMN vehicle_type, landing on user_version 3 (plan 2026-07-05-1930-vehicle-type-icons, Risk R1)', () => {
+      const allArgs = fakeConn.execute.calls.allArgs();
+      const alterCall = allArgs.find(args => String(args[0]).includes('ALTER TABLE vehicle ADD COLUMN vehicle_type'));
+      expect(alterCall).toBeDefined();
+      expect(alterCall?.[1]).toBe(true); // transactional — plain ADD COLUMN is safe, no FK toggle needed
+
+      expect(fakeConn.execute).toHaveBeenCalledWith('PRAGMA user_version = 3;', false);
+    });
+
     it('getBrands()/getFuelTypes() filter soft-hidden rows (deleted_at IS NULL)', async () => {
       fakeConn.query.calls.reset();
       fakeConn.query.and.resolveTo({ values: [] });
@@ -175,11 +184,38 @@ describe('DbService', () => {
 
     it('rowToVehicle() maps DDL column names (plate/default_fuel_type_id) to model field names', async () => {
       fakeConn.query.and.resolveTo({
-        values: [{ id: 5, name: 'Civic', plate: 'กข 1234', default_fuel_type_id: 2, created_at: '2026-01-01T00:00:00.000Z' }],
+        values: [{ id: 5, name: 'Civic', plate: 'กข 1234', default_fuel_type_id: 2, vehicle_type: null, created_at: '2026-01-01T00:00:00.000Z' }],
       });
       const [vehicle] = await service.getVehicles();
       expect(vehicle.licensePlate).toBe('กข 1234');
       expect(vehicle.fuelTypeId).toBe(2);
+    });
+
+    it('addVehicle() writes vehicle_type and the round-tripped vehicle carries vehicleType back (schema v3 — plan 2026-07-05-1930-vehicle-type-icons)', async () => {
+      fakeConn.run.and.resolveTo({ changes: { changes: 1, lastId: 9 } });
+      fakeConn.query.and.resolveTo({
+        values: [{ id: 9, name: 'Fortuner', plate: null, default_fuel_type_id: null, vehicle_type: 'ppv', created_at: '2026-07-05T00:00:00.000Z' }],
+      });
+
+      const created = await service.addVehicle({ name: 'Fortuner', vehicleType: 'ppv' });
+
+      const insertCall = fakeConn.run.calls.first();
+      expect(insertCall.args[0]).toContain('vehicle_type');
+      expect(insertCall.args[1]).toEqual(['Fortuner', null, null, 'ppv']);
+      expect(created.vehicleType).toBe('ppv');
+    });
+
+    it('updateVehicle() changes vehicle_type via UPDATE', async () => {
+      fakeConn.query.and.resolveTo({
+        values: [{ id: 9, name: 'Fortuner', plate: null, default_fuel_type_id: null, vehicle_type: 'suv', created_at: '2026-07-05T00:00:00.000Z' }],
+      });
+
+      const updated = await service.updateVehicle(9, { vehicleType: 'suv' });
+
+      const updateCall = fakeConn.run.calls.mostRecent();
+      expect(updateCall.args[0]).toContain('vehicle_type = ?');
+      expect(updateCall.args[1]).toEqual(['suv', 9]);
+      expect(updated.vehicleType).toBe('suv');
     });
 
     it('addEntry() defaults missing liters/price/amount to 0 to satisfy DDL NOT NULL columns', async () => {
@@ -270,6 +306,34 @@ describe('DbService', () => {
 
       expect(fakeConn.execute).not.toHaveBeenCalledWith('PRAGMA user_version = 1;', false);
       expect(fakeConn.execute).toHaveBeenCalledWith('PRAGMA user_version = 2;', false);
+    });
+  });
+
+  describe('existing v2 database migrates to v3 (plan 2026-07-05-1930-vehicle-type-icons)', () => {
+    let fakeConn: ReturnType<typeof makeFakeConn>;
+
+    beforeEach(async () => {
+      spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+      fakeConn = makeFakeConn();
+      fakeConn.query.and.resolveTo({ values: [{ user_version: 2 }] });
+      spyOn(SQLiteConnection.prototype, 'createConnection').and.resolveTo(fakeConn as unknown as never);
+      await service.init();
+    });
+
+    it('does not re-run earlier migrations, only adds the vehicle_type column and lands on user_version 3', () => {
+      const allArgs = fakeConn.execute.calls.allArgs();
+      const baseDdlCall = allArgs.find(args => String(args[0]).includes('CREATE TABLE IF NOT EXISTS brand'));
+      expect(baseDdlCall).toBeUndefined();
+
+      const v1v2Call = allArgs.find(args => String(args[0]).includes('DROP TABLE fuel_type'));
+      expect(v1v2Call).toBeUndefined();
+
+      const alterCall = allArgs.find(args => String(args[0]).includes('ALTER TABLE vehicle ADD COLUMN vehicle_type'));
+      expect(alterCall).toBeDefined();
+      expect(alterCall?.[1]).toBe(true);
+
+      expect(fakeConn.execute).not.toHaveBeenCalledWith('PRAGMA user_version = 2;', false);
+      expect(fakeConn.execute).toHaveBeenCalledWith('PRAGMA user_version = 3;', false);
     });
   });
 });

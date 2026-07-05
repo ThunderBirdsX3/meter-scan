@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { ViewWillEnter } from '@ionic/angular';
 import { FuelDataService } from '../services/fuel-data.service';
 import { FuelEntry, Trip, Vehicle } from '../models/fuel-entry.model';
 import { Router } from '@angular/router';
@@ -14,7 +15,7 @@ interface MonthGroup {
   styleUrls: ['history.page.scss'],
   standalone: false,
 })
-export class HistoryPage implements OnInit {
+export class HistoryPage implements ViewWillEnter {
 
   grouped: MonthGroup[] = [];
   vehicles: Vehicle[] = [];
@@ -50,7 +51,9 @@ export class HistoryPage implements OnInit {
     private router: Router,
   ) {}
 
-  async ngOnInit() {
+  // ion-tabs keeps this page instance alive across tab switches — ngOnInit fires only once, so
+  // reload here instead or the list goes stale (new/edited/deleted entries) after CRUD elsewhere.
+  async ionViewWillEnter() {
     const [vehicles, trips] = await Promise.all([
       this.data.getVehicles(),
       this.data.getTrips(),
