@@ -58,7 +58,7 @@ export class EntryDetailPage implements OnInit {
 
   openEdit() {
     // Navigate back to history with edit intent — no separate edit route yet
-    this.router.navigate(['/tabs/history'], { queryParams: { editId: this.entry?.id } });
+    this.router.navigate(['/history'], { queryParams: { editId: this.entry?.id } });
   }
 
   confirmDelete() {
@@ -68,6 +68,6 @@ export class EntryDetailPage implements OnInit {
   private async doDelete() {
     if (!this.entry) return;
     await this.data.deleteEntry(this.entry.id);
-    this.router.navigate(['/tabs/history']);
+    this.router.navigate(['/history']);
   }
 }

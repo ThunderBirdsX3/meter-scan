@@ -7,6 +7,10 @@ const routes: Routes = [
     loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsModule),
   },
   {
+    path: 'history',
+    loadChildren: () => import('./history/history.module').then(m => m.HistoryPageModule),
+  },
+  {
     path: '',
     redirectTo: 'tabs',
     pathMatch: 'full',

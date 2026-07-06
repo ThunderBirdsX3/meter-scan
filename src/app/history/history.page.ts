@@ -100,7 +100,7 @@ export class HistoryPage implements ViewWillEnter {
   }
 
   viewDetail(entry: FuelEntry) {
-    this.router.navigate(['/tabs/history/detail', entry.id]);
+    this.router.navigate(['/history/detail', entry.id]);
   }
 
   // ── Edit ──────────────────────────────────────────────────────────────────

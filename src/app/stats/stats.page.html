@@ -1,5 +1,5 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-title>ภาพรวม</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -30,16 +30,19 @@
     <!-- Summary cards grid (DS Component #9) -->
     <div class="stat-grid">
 
-      <!-- Total amount — emphasized (full width) -->
-      <ion-card class="stat-card stat-card--full"
-                role="group"
-                [attr.aria-label]="'ยอดรวม ' + (overview.totalAmount | number:'1.2-2') + ' บาท'">
-        <div class="stat-label accent-label">ยอดรวม</div>
-        <div class="stat-value">
+      <!-- Total amount — brand gradient hero (full width) -->
+      <div class="stat-hero"
+           role="group"
+           [attr.aria-label]="'ยอดรวม ' + (overview.totalAmount | number:'1.2-2') + ' บาท'">
+        <div class="stat-hero__label">ยอดรวม</div>
+        <div class="stat-hero__value ds-readout">
           {{ overview.totalAmount | number:'1.0-0' }}
-          <span class="stat-unit">฿</span>
+          <span class="stat-hero__unit">฿</span>
         </div>
-      </ion-card>
+        <div class="stat-hero__meta">
+          {{ overview.fillCount }} ครั้ง · {{ overview.totalLiters | number:'1.1-1' }} L
+        </div>
+      </div>
 
       <!-- Fill count -->
       <ion-card class="stat-card stat-card--half"

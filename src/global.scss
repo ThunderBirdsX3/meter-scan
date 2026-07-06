@@ -35,3 +35,134 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 @import "@ionic/angular/css/palettes/dark.class.css";
 /* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * DS v2.1 deepen layer — global component restyle + utilities
+ * Cards float on tinted canvas; semantic tokens only (see DS-Tokens v2.1).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Headers: flat, blend with canvas, bold titles ── */
+ion-header {
+  box-shadow: none;
+
+  &::after {
+    display: none;
+  }
+
+  ion-toolbar {
+    --border-width: 0;
+
+    ion-title {
+      font-weight: var(--weight-bold);
+      letter-spacing: -0.01em;
+    }
+  }
+}
+
+/* ── Buttons: softer pill radius ── */
+ion-button {
+  --border-radius: var(--radius-xl);
+}
+
+/* ── Card container: grouped-inset list / raised card ──
+ * Wrap an ion-list or block content. Dark mode: border carries the edge. */
+.ds-card {
+  margin: var(--space-3) var(--space-4);
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+
+  ion-list {
+    background: transparent;
+    padding: 0;
+  }
+
+  ion-item {
+    --background: transparent;
+  }
+
+  ion-item:last-of-type {
+    --border-width: 0;
+    --inner-border-width: 0;
+  }
+}
+
+/* ── Hero surface: brand gradient, white bold text only ── */
+.ds-hero {
+  margin: var(--space-3) var(--space-4);
+  padding: var(--space-5) var(--space-5);
+  border-radius: var(--radius-3xl);
+  background: var(--gradient-brand);
+  color: #ffffff;
+}
+
+/* ── Section label: uppercase eyebrow above a card ── */
+.ds-section-label {
+  display: block;
+  margin: var(--space-5) var(--space-5) var(--space-2);
+  font-size: var(--font-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ── Icon containers ── */
+.ds-avatar {
+  /* 40px tinted circle — list leading icon (e.g. vehicle in history) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface-brand-subtle);
+  color: var(--color-action-primary-default);
+
+  ion-icon,
+  .ds-vehicle-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.ds-icon-tile {
+  /* 32px rounded square — settings row leading icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-brand-subtle);
+  color: var(--color-action-primary-default);
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+/* ── Meter readout: the app's signature — tabular digits, wide tracking ── */
+.ds-readout {
+  font-variant-numeric: var(--numeric-readout);
+  letter-spacing: var(--tracking-readout);
+  font-weight: var(--weight-bold);
+}
+
+/* ── Segments: pill track on tinted bg, raised active thumb ── */
+ion-segment {
+  --background: var(--color-surface-brand-subtle);
+  border-radius: 999px;
+  padding: 3px;
+
+  ion-segment-button {
+    --border-radius: 999px;
+    --indicator-box-shadow: var(--shadow-sm);
+    min-height: 34px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}

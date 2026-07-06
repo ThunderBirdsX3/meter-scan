@@ -1,7 +1,7 @@
 // Add page — DS tokens only; no raw hex/spacing outside DS scale
 
 .add-content {
-  --background: var(--color-surface-sunken);
+  --background: var(--color-surface-app);
 }
 
 // ── Error banner (V1+V5 fix: contrast 5.28:1, role=alert) ────────────────
@@ -71,13 +71,14 @@
 // ── Field item (DS Component #7) ──────────────────────────────────────────
 .field-item {
   --background: var(--color-surface-raised);
-  --border-radius: var(--radius-lg);
-  --box-shadow: var(--shadow-sm);
+  --border-radius: var(--radius-xl);
+  --box-shadow: none;
   --padding-start: var(--space-4);
   --padding-end: var(--space-4);
   --inner-padding-end: 0;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border-subtle);
   margin-bottom: 0;
 }
 
@@ -149,10 +150,12 @@
 }
 
 // ── Scan assist section ───────────────────────────────────────────────────
+// v2.1 — tinted brand card invites the scan action (signature feature)
 .scan-assist-section {
-  margin: var(--space-6) 0 var(--space-4);
-  border-top: 1px solid var(--color-border-default);
-  padding-top: var(--space-4);
+  margin: var(--space-5) 0 var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface-brand-subtle);
+  border-radius: var(--radius-2xl);
 
   .scan-hint {
     font-size: var(--font-xs);
@@ -160,11 +163,69 @@
     text-align: center;
     margin: 0 0 var(--space-3);
   }
+
+  ion-button {
+    margin: 0;
+  }
 }
 
 // ── Submit section ────────────────────────────────────────────────────────
+// Save button = brand-gradient hero surface (white bold text, AA-safe — see plan
+// 2026-07-06-0930 Design Additions). Uses --gradient-brand/--color-neutral-0, NOT an override of
+// --ion-color-primary-contrast / --color-text-inverse (those stay untouched app-wide).
 .submit-section {
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
+
+  ion-button {
+    min-height: 50px;
+    font-weight: var(--weight-semibold);
+  }
+}
+
+.save-btn {
+  --background: var(--gradient-brand);
+  --background-activated: var(--gradient-brand);
+  --background-hover: var(--gradient-brand);
+  --background-focused: var(--gradient-brand);
+  --color: var(--color-neutral-0);
+  --box-shadow: none;
+}
+
+// ── FAB save (mid-scroll — hidden via CSS once .submit-section is reached; stays in the DOM so
+// scrollHeight never changes while scrolling — fix 2026-07-06-1033 step 1) ─────────
+ion-fab {
+  transition: opacity var(--duration-fast) var(--easing-standard);
+
+  &.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.save-fab {
+  --background: var(--gradient-brand);
+  --background-activated: var(--gradient-brand);
+  --background-hover: var(--gradient-brand);
+  --background-focused: var(--gradient-brand);
+  --color: var(--color-neutral-0);
+  --box-shadow: 0 6px 16px rgba(15, 118, 110, 0.35);
+  transition: transform var(--duration-fast) var(--easing-standard);
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:active {
+      transform: none;
+    }
+  }
 }
 
 // ── Scan overlay (modal-style fullscreen) ─────────────────────────────────

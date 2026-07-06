@@ -654,3 +654,18 @@ loaded · image-missing (placeholder) · deleting (confirm flow).
 - ✗ render a broken/empty image box when the temp path is missing — show the labeled placeholder (SRS Q3).
 - ✗ image without `alt`; placeholder without accessible text.
 - ✗ delete without a confirm step.
+
+---
+
+## v2.1 deepen notes (2026-07-05 — plan [[2026-07-05-2130-ui-deepen-v2_1]])
+
+Visual layer changes to existing components; anatomy/behavior/a11y unchanged unless noted.
+
+- **#6 Tab Bar** — top border removed; bar elevated (light: upward soft shadow / dark: `border-subtle` hairline). Active indicator changed from top bar to **M3-style tinted pill** (`surface-brand-subtle`) rendered as padding-box on the `ion-icon` itself (5px 14px + radius 999) — tracks icon position on every platform layout; padding applied in both states so no layout shift. Non-color signal preserved: pill shape + semibold label (SC 1.4.1). Center FAB now `--gradient-brand` with custom fuel-nozzle glyph (`assets/icons/nozzle.svg`, currentColor).
+- **#7 Form Field** — `radius-xl`, `shadow-card` + `border-subtle` edge; scan-assist section is a `surface-brand-subtle` tinted card (was border-top divider).
+- **#8 Segmented Control** — pill track on `surface-brand-subtle` (global.scss), checked = primary fill + semibold (unchanged).
+- **#9 Summary Stat Card** — headline stat promoted to **Hero Stat Card** variant: `--gradient-brand` bg, `radius-3xl`, white bold `ds-readout` digits + meta line. Remaining tiles: `radius-2xl` + `shadow-card`.
+- **#10 List-Sliding Item** — items now live inside **grouped inset cards** (`radius-2xl`, `shadow-card`, hairline separators, last-item border suppressed) instead of full-bleed lists.
+- **#12 Entry Detail** — readout split: key numbers (฿ รวม / ลิตร / ฿ต่อลิตร) in gradient hero card; meta rows in grouped card. `no-reading` still shows "—" text + aria-label (V6 rule).
+- **NEW containers** — `.ds-avatar` 40px tinted circle (history thumbs placeholder, vehicle list icons), `.ds-icon-tile` 32px tinted rounded square (settings rows). Icon color = `action-primary-default` on `surface-brand-subtle` (decorative, aria-hidden).
+- **Vehicle icons v3** — 8 outline SVGs (`assets/vehicle-icons/`): `stroke="currentColor"` width 1.5, round caps/joins, `fill="none"` (small filled accents only where legibility needs it: motorcycle/scooter seat, bigbike tank/tail). Matches ionicons-outline aesthetic used elsewhere in the app. 24×24 viewBox unchanged → no call-site changes. Auto light/dark via currentColor. (v2 duotone superseded 2026-07-05 — user feedback: silhouettes read as cartoonish; outline clearer.)

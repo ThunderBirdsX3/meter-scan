@@ -25,6 +25,15 @@
   --color-red-700: #c5000f;
   --color-red-100: #fce8e9;
 
+  // v2.1 deepen-layer primitives (tinted canvas + brand tints)
+  --color-teal-canvas-light: #f0f4f3;   // page canvas, light
+  --color-teal-canvas-dark:  #0c100f;   // page canvas, dark
+  --color-teal-surface-dark: #171d1b;   // raised surface, dark
+  --color-teal-sunken-dark:  #080b0a;   // sunken surface, dark
+  --color-teal-border-dark:  #242c29;   // hairline border, dark
+  --color-teal-tint-08: rgba(15, 118, 110, 0.08);   // teal-700 @ 8%
+  --color-teal-tint-14: rgba(20, 184, 166, 0.14);   // teal-500 @ 14%
+
   // Neutrals (light mode)
   --color-neutral-0:    #ffffff;
   --color-neutral-50:   #f4f5f8;
@@ -54,6 +63,8 @@
   --radius-md: 8px;
   --radius-lg: 10px;
   --radius-xl: 12px;
+  --radius-2xl: 16px;   // v2.1 — grouped cards / inset lists
+  --radius-3xl: 20px;   // v2.1 — hero card
 
   // ── Typography ────────────────────────────────────────────────────────────
   --font-2xs:         0.7rem;
@@ -74,6 +85,8 @@
 
   // ── Elevation ─────────────────────────────────────────────────────────────
   --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+  // v2.1 — card elevation: soft two-layer, teal-black tint. Dark mode sets `none` (border carries edge)
+  --shadow-card: 0 1px 2px rgba(13, 42, 38, 0.05), 0 4px 16px rgba(13, 42, 38, 0.07);
 
   // ── Motion ────────────────────────────────────────────────────────────────
   --duration-fast:     150ms;
@@ -96,6 +109,11 @@
   --color-surface-sunken:  var(--color-neutral-50);
   --color-surface-canvas:  var(--color-neutral-1000);
   --color-surface-danger:  var(--color-red-100);
+  // v2.1 — page canvas ≠ card surface (cards float on tinted bg)
+  --color-surface-app:          var(--color-teal-canvas-light);
+  --color-surface-brand-subtle: var(--color-teal-tint-08);
+  // v2.1 — brand gradient (hero surfaces; white bold/large text only — AA)
+  --gradient-brand: linear-gradient(135deg, var(--color-teal-700), var(--color-emerald-700));
 
   // Action — PRIMARY (light: teal-700 on white text)
   // light #0f766e / dark #14b8a6 — DO NOT collapse (binding contrast constraint)
@@ -149,11 +167,13 @@
   --ion-color-danger-shade:     #ad000d;
   --ion-color-danger-tint:      #cb1a28;
 
-  --ion-background-color: var(--color-surface-base);
+  // v2.1 — canvas is the tinted app surface; items/cards stay raised white
+  --ion-background-color: var(--color-surface-app);
+  --ion-background-color-rgb: 240, 244, 243;
   --ion-text-color:        var(--color-text-default);
   --ion-card-background:   var(--color-surface-raised);
   --ion-item-background:   var(--color-surface-raised);
-  --ion-toolbar-background: var(--color-surface-raised);
+  --ion-toolbar-background: var(--color-surface-app);
 }
 
 // ── Semantic tokens — DARK MODE ───────────────────────────────────────────
@@ -168,11 +188,15 @@
   --color-text-danger:  #ff6b6b;
   --color-text-link:    var(--color-teal-500);
 
-  // Surface
-  --color-surface-base:   #121212;
-  --color-surface-raised: #1e1e1e;
-  --color-surface-sunken: #0a0a0a;
+  // Surface (v2.1 — retinted toward teal-black for palette cohesion)
+  --color-surface-base:   var(--color-teal-canvas-dark);
+  --color-surface-raised: var(--color-teal-surface-dark);
+  --color-surface-sunken: var(--color-teal-sunken-dark);
   --color-surface-danger: #3a1416;
+  --color-surface-app:          var(--color-teal-canvas-dark);
+  --color-surface-brand-subtle: var(--color-teal-tint-14);
+  --gradient-brand: linear-gradient(135deg, var(--color-teal-600), var(--color-emerald-600));
+  --shadow-card: none;   // dark: border carries the card edge
 
   // Action — PRIMARY (dark: teal-500 on dark text #222428 = 6.24:1 PASS)
   --color-action-primary-default:  var(--color-teal-500);
@@ -182,8 +206,8 @@
   --color-action-accent-default:   var(--color-emerald-400);
 
   // Border / focus (dark)
-  --color-border-default: #2a2a2a;
-  --color-border-subtle:  #1e1e1e;
+  --color-border-default: var(--color-teal-border-dark);
+  --color-border-subtle:  var(--color-teal-surface-dark);
   --color-border-focus:   var(--color-teal-500);
 
   // Accent (dark)
@@ -198,9 +222,10 @@
   --ion-color-primary-shade:    var(--color-teal-600);
   --ion-color-primary-tint:     var(--color-teal-400, #2dd4bf);
 
-  --ion-background-color: var(--color-surface-base);
+  --ion-background-color: var(--color-surface-app);
+  --ion-background-color-rgb: 12, 16, 15;
   --ion-text-color:        var(--color-text-default);
   --ion-card-background:   var(--color-surface-raised);
   --ion-item-background:   var(--color-surface-raised);
-  --ion-toolbar-background: var(--color-surface-raised);
+  --ion-toolbar-background: var(--color-surface-app);
 }

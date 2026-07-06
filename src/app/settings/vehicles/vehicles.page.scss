@@ -1,28 +1,39 @@
-// Vehicles page — DS tokens only
+// Vehicles page — DS tokens only (v2.1 grouped card + tinted avatars)
 
 .vehicles-content {
-  --background: var(--color-surface-sunken);
+  --background: var(--color-surface-app);
 }
 
+// ── Vehicle list — grouped inset card ─────────────────────────────────────
 .vehicles-list {
-  margin-bottom: var(--space-2);
+  margin: var(--space-4);
+  padding: 0;
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
 
   ion-item {
-    --background: var(--color-surface-raised);
+    --background: transparent;
+  }
+
+  ion-item-sliding:last-of-type ion-item {
+    --border-width: 0;
+    --inner-border-width: 0;
+  }
+
+  .ds-avatar {
+    margin-inline-end: var(--space-3);
   }
 }
 
-.item-icon {
-  color: var(--color-text-muted);
-  font-size: var(--font-lg);
-}
-
 // ── Vehicle type icon (list) — ion-icon [src] renders inline SVG so `currentColor` (set via
-// `color` above) actually applies; an <img> would NOT inherit it (separate document context —
-// plan Risk R2, dark-mode requirement) ─────────────────────────────────────────────────────
+// `color` on .ds-avatar) actually applies; an <img> would NOT inherit it (separate document
+// context — plan Risk R2, dark-mode requirement) ─────────────────────────────────────────────
 .vehicle-type-icon {
-  width: var(--font-lg);
-  height: var(--font-lg);
+  width: 24px;
+  height: 24px;
 }
 
 // ── Inline item actions (non-swipe a11y path for edit/delete — DS #10 rule) ─
@@ -40,17 +51,20 @@
 
 // ── Empty list ────────────────────────────────────────────────────────────
 .list-empty {
-  padding: var(--space-4);
+  margin: var(--space-4);
+  padding: var(--space-8) var(--space-4);
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--font-sm);
   background: var(--color-surface-raised);
-  margin: 0 0 var(--space-2);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
 }
 
 // ── Modal (DS Component #11) ──────────────────────────────────────────────
 .modal-content {
-  --background: var(--color-surface-sunken);
+  --background: var(--color-surface-app);
 }
 
 .modal-form {
@@ -62,9 +76,10 @@
 
 .field-item {
   --background: var(--color-surface-raised);
-  --border-radius: var(--radius-lg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  --border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
 }
 
 .field-label {
@@ -99,18 +114,25 @@
   padding: var(--space-2);
   background: var(--color-surface-raised);
   border: 2px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   color: var(--color-text-muted);
   font-size: var(--font-2xs);
   font-family: inherit;
 
   ion-icon {
-    width: var(--font-lg);
-    height: var(--font-lg);
+    width: 24px;
+    height: 24px;
   }
 
+  // Selected: border + tinted fill + primary color (not color alone — SC 1.4.1)
   &.selected {
     border-color: var(--color-border-focus);
+    background: var(--color-surface-brand-subtle);
     color: var(--color-action-primary-default);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
   }
 }

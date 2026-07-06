@@ -46,17 +46,17 @@ subagents:
 #   full claude-* id to pin all commands.
 # - `overrides.<verb>` pins one command (alias|claude-*|inherit). Invalid value ⇒ inherit.
 commands:
-  model: inherit                        # default: follow the current session model
+  model: sonnet                        # default: follow the current session model
   overrides:                            # pin heavy-reasoning / code-touching commands to opus
     ow-plan: opus
-    ow-implement: opus
+    ow-implement: sonnet
     ow-fix: sonnet
     ow-fix-issue: sonnet
     ow-reverse-engineer: opus
     ow-clarify: opus
     ow-checklist: sonnet
     ow-new: opus
-    ow-design: sonnet
+    ow-design: opus
     ow-secure: opus
 
 # Submodules (used by /ow-git and /ow-implement)

@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { ViewWillEnter } from '@ionic/angular';
+import { IonContent, ToastController, ViewDidEnter, ViewWillEnter } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
 import { CameraService } from '../services/camera.service';
 import { MeterOnnxService } from '../services/meter-onnx.service';
@@ -22,8 +22,9 @@ const FIELD_PALETTE = [
   styleUrls: ['add.page.scss'],
   standalone: false,
 })
-export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
+export class AddPage implements OnInit, AfterViewInit, ViewWillEnter, ViewDidEnter {
   @ViewChild('canvas') canvasRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild(IonContent) content?: IonContent;
 
   // ── Form state ────────────────────────────────────────────────────────────
   // datetimeLocal = UI-only string for the datetime-local input (YYYY-MM-DDTHH:mm);
@@ -36,6 +37,11 @@ export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
   brandFuelOptions: BrandFuelOption[] = []; // selected brand's offers — picker source when a brand IS selected
   error: string | null = null;
   isSaving = false;
+
+  // FAB↔inline save toggle (plan 2026-07-06-0930, steps 3/4): true = scrolled to the bottom of the
+  // form → inline submit button shown; false = mid-scroll → floating FAB shown instead. Starts true
+  // so short forms (shorter than viewport, no scroll possible) never show an unnecessary FAB.
+  atBottom = true;
 
   // tracks whether draft.fuelTypeId currently holds an auto-filled value (vs a manual pick) —
   // auto-fill from vehicle default may overwrite ONLY while this is true or the field is empty
@@ -90,6 +96,7 @@ export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
     private camera: CameraService,
     private onnx: MeterOnnxService,
     private data: FuelDataService,
+    private toastCtrl: ToastController,
   ) {}
 
   ngOnInit() {
@@ -119,6 +126,11 @@ export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
     this.onnx.warmUp();
   }
 
+  /** Recompute the FAB↔inline boundary once the form/pickers have laid out (plan step 4). */
+  async ionViewDidEnter() {
+    await this.updateAtBottom();
+  }
+
   private async loadPickerData() {
     const [vehicles, trips, brands, fuelTypes] = await Promise.all([
       this.data.getVehicles(),
@@ -143,6 +155,21 @@ export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
     this.brandFuelOptions = brandId ? await this.data.getBrandFuels(brandId) : [];
   }
 
+  // ── Trip → vehicle auto-fill (plan 2026-07-06-0930, step 1) ─────────────────
+
+  /**
+   * Selecting a trip that has an assigned vehicle auto-selects that vehicle and cascades the
+   * vehicle's fuel-type autofill (onVehicleChange). Selecting "— ไม่ระบุ —" or a trip without a
+   * vehicleId leaves draft.vehicleId untouched — never overwrites a manual vehicle pick.
+   */
+  onTripChange() {
+    const trip = this.trips.find(t => t.id === this.draft.tripId);
+    if (trip?.vehicleId != null) {
+      this.draft.vehicleId = trip.vehicleId;
+      this.onVehicleChange();
+    }
+  }
+
   // ── Vehicle → fuel-type auto-fill (plan 2026-07-03-2208, steps 2/3/5) ───────
 
   /**
@@ -161,6 +188,29 @@ export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
   /** User picked a fuel type manually — auto-fill must never overwrite it again (plan step 3). */
   onFuelTypeManualChange() {
     this.fuelTypeAutoFilled = false;
+  }
+
+  // ── FAB ↔ inline save toggle (plan 2026-07-06-0930, step 3) ─────────────────
+
+  /** ion-content (ionScroll) handler — recomputes the FAB/inline boundary from the live scrollTop. */
+  async onScroll(ev: CustomEvent) {
+    await this.updateAtBottom((ev as { detail?: { scrollTop?: number } })?.detail?.scrollTop);
+  }
+
+  /**
+   * Compares scrollTop + clientHeight against scrollHeight (minus a small threshold to absorb iOS
+   * rubber-band overscroll) and only writes `atBottom` when the boundary is actually crossed, to
+   * avoid re-rendering on every ionScroll tick.
+   */
+  private async updateAtBottom(scrollTopOverride?: number): Promise<void> {
+    const el = await this.content?.getScrollElement();
+    if (!el) return;
+    const scrollTop = scrollTopOverride ?? el.scrollTop;
+    const THRESHOLD = 24;
+    const nearBottom = scrollTop + el.clientHeight >= el.scrollHeight - THRESHOLD;
+    if (nearBottom !== this.atBottom) {
+      this.atBottom = nearBottom;
+    }
   }
 
   // ── Form save ─────────────────────────────────────────────────────────────
@@ -209,11 +259,23 @@ export class AddPage implements OnInit, AfterViewInit, ViewWillEnter {
       this.scanDraftActive = false;
       this.currentImage = null;
       this.fuelTypeAutoFilled = false;
+      await this.presentToast('บันทึกสำเร็จ');
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ';
     } finally {
       this.isSaving = false;
     }
+  }
+
+  /** Brief success feedback after a save (fix 2026-07-06-1033 step 3) — non-blocking, auto-dismiss. */
+  private async presentToast(message: string): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 1500,
+      position: 'bottom',
+      color: 'success',
+    });
+    await toast.present();
   }
 
   // ── Scan-assist ───────────────────────────────────────────────────────────

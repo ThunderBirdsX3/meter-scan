@@ -1,5 +1,5 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/settings" aria-label="กลับ"></ion-back-button>
     </ion-buttons>
@@ -20,7 +20,9 @@
   <ion-list lines="inset" class="vehicles-list" *ngIf="vehicles.length > 0">
     <ion-item-sliding *ngFor="let v of vehicles">
       <ion-item>
-        <ion-icon *ngIf="iconFor(v)" [src]="iconFor(v)" slot="start" aria-hidden="true" class="item-icon vehicle-type-icon"></ion-icon>
+        <span *ngIf="iconFor(v)" slot="start" class="ds-avatar" aria-hidden="true">
+          <ion-icon [src]="iconFor(v)" class="vehicle-type-icon"></ion-icon>
+        </span>
         <ion-label>
           <h3>{{ v.name }}</h3>
           <p>{{ v.licensePlate }}</p>

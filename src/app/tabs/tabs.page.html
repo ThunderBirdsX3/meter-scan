@@ -6,20 +6,19 @@
       <ion-label>ภาพรวม</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="add" class="tab-emphasized">
-      <ion-icon name="add-circle-outline" aria-hidden="true"></ion-icon>
-      <ion-label>เพิ่ม</ion-label>
-    </ion-tab-button>
-
-    <ion-tab-button tab="history">
-      <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
-      <ion-label>ประวัติ</ion-label>
-    </ion-tab-button>
-
     <ion-tab-button tab="settings">
       <ion-icon name="settings-outline" aria-hidden="true"></ion-icon>
       <ion-label>ตั้งค่า</ion-label>
     </ion-tab-button>
 
   </ion-tab-bar>
+
+  <button
+    class="fab-add"
+    type="button"
+    routerLink="/tabs/add"
+    routerLinkActive="fab-add-active"
+    aria-label="เพิ่มการเติมน้ำมัน">
+    <ion-icon src="assets/icons/nozzle.svg" aria-hidden="true"></ion-icon>
+  </button>
 </ion-tabs>

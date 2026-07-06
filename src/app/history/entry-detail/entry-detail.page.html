@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/history" aria-label="กลับ"></ion-back-button>
+      <ion-back-button defaultHref="/history" aria-label="กลับ"></ion-back-button>
     </ion-buttons>
     <ion-title>รายละเอียด</ion-title>
     <ion-buttons slot="end">
@@ -34,44 +34,48 @@
     </div>
   </div>
 
-  <!-- Readout rows (DS Component #3) -->
+  <!-- Hero readout (v2.1) — key numbers on brand gradient -->
+  <div class="detail-hero"
+       role="group"
+       [attr.aria-label]="'ยอดรวม: ' + (entry.totalAmount ? (entry.totalAmount | number:'1.2-2') + ' บาท' : 'ไม่มีข้อมูล')">
+    <div class="detail-hero__label">ยอดรวม</div>
+    <div class="detail-hero__value ds-readout"
+         [class.no-reading]="!entry.totalAmount"
+         [attr.aria-hidden]="!entry.totalAmount ? 'true' : null">
+      {{ entry.totalAmount ? (entry.totalAmount | number:'1.2-2') : '—' }}
+      <span class="detail-hero__unit" *ngIf="entry.totalAmount">฿</span>
+    </div>
+    <div class="detail-hero__substats">
+      <div class="hero-substat"
+           [class.no-reading]="!entry.liters"
+           [attr.aria-label]="'ลิตร: ' + (entry.liters ? (entry.liters | number:'1.1-1') + ' ลิตร' : 'ไม่มีข้อมูล')">
+        <span class="hero-substat__label">ลิตร</span>
+        <span class="hero-substat__value ds-readout" [attr.aria-hidden]="!entry.liters ? 'true' : null">
+          {{ entry.liters ? (entry.liters | number:'1.1-1') : '—' }}
+        </span>
+      </div>
+      <div class="hero-substat"
+           [class.no-reading]="!entry.pricePerLiter"
+           [attr.aria-label]="'ราคาต่อลิตร: ' + (entry.pricePerLiter ? (entry.pricePerLiter | number:'1.2-2') + ' บาท' : 'ไม่มีข้อมูล')">
+        <span class="hero-substat__label">฿/ลิตร</span>
+        <span class="hero-substat__value ds-readout" [attr.aria-hidden]="!entry.pricePerLiter ? 'true' : null">
+          {{ entry.pricePerLiter ? (entry.pricePerLiter | number:'1.2-2') : '—' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meta rows — grouped card (DS Component #12) -->
   <div class="readout-section">
 
     <div class="readout-row" *ngIf="entry.datetime">
       <div class="readout-label">วันที่เวลา</div>
-      <div class="readout-value date-value">{{ entry.datetime | date:'dd MMMM yyyy HH:mm' }}</div>
-    </div>
-
-    <div class="readout-row accent-row"
-         [class.no-reading]="!entry.totalAmount"
-         [attr.aria-label]="'ยอดรวม: ' + (entry.totalAmount ? (entry.totalAmount | number:'1.2-2') + ' บาท' : 'ไม่มีข้อมูล')">
-      <div class="readout-label">ยอดรวม</div>
-      <div class="readout-value" [attr.aria-hidden]="!entry.totalAmount ? 'true' : null">
-        {{ entry.totalAmount ? (entry.totalAmount | number:'1.2-2') + ' ฿' : '—' }}
-      </div>
-    </div>
-
-    <div class="readout-row accent-row"
-         [class.no-reading]="!entry.liters"
-         [attr.aria-label]="'ลิตร: ' + (entry.liters ? (entry.liters | number:'1.1-1') + ' ลิตร' : 'ไม่มีข้อมูล')">
-      <div class="readout-label">ลิตร</div>
-      <div class="readout-value" [attr.aria-hidden]="!entry.liters ? 'true' : null">
-        {{ entry.liters ? (entry.liters | number:'1.1-1') + ' L' : '—' }}
-      </div>
-    </div>
-
-    <div class="readout-row accent-row"
-         [class.no-reading]="!entry.pricePerLiter"
-         [attr.aria-label]="'ราคาต่อลิตร: ' + (entry.pricePerLiter ? (entry.pricePerLiter | number:'1.2-2') + ' บาท' : 'ไม่มีข้อมูล')">
-      <div class="readout-label">฿/ลิตร</div>
-      <div class="readout-value" [attr.aria-hidden]="!entry.pricePerLiter ? 'true' : null">
-        {{ entry.pricePerLiter ? (entry.pricePerLiter | number:'1.2-2') : '—' }}
-      </div>
+      <div class="readout-value text-value">{{ entry.datetime | date:'dd MMMM yyyy HH:mm' }}</div>
     </div>
 
     <div class="readout-row" *ngIf="entry.odometer">
       <div class="readout-label">เลขไมล์</div>
-      <div class="readout-value">{{ entry.odometer | number }} กม.</div>
+      <div class="readout-value num-value">{{ entry.odometer | number }} กม.</div>
     </div>
 
     <div class="readout-row" *ngIf="vehicleName">

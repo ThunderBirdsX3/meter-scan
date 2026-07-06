@@ -1,12 +1,12 @@
 ---
 title: DS-Tokens
-tokens_version: 2
+tokens_version: 2.1
 status: active
-derived_from: src/theme/variables.scss (empty → Ionic 8 default palette), src/global.scss, src/app/home/home.page.scss
-theme_modes: [light, dark]  # dark via @ionic/angular/css/palettes/dark.system.css
+derived_from: src/theme/variables.scss (DS token implementation), src/global.scss
+theme_modes: [light, dark]  # dark via dark.class.css + manual .ion-palette-dark toggle (theme.service.ts)
 contrast_standard: WCAG 2.2 AA
 last_updated: 2026-07-05
-retheme_note: "v2 — primary/accent retheme blue → teal (primary) + emerald (accent), clean-fintech-tracker palette. Functional success/warning/danger unchanged. Blue primitives removed (no longer referenced)."
+retheme_note: "v2 — primary/accent retheme blue → teal (primary) + emerald (accent), clean-fintech-tracker palette. Functional success/warning/danger unchanged. Blue primitives removed (no longer referenced). v2.1 — additive deepen layer: tinted canvas (surface-app), brand gradient, brand-subtle tint, radius-2xl/3xl, shadow-card. See §4."
 ---
 
 # Design Tokens — Meter Scan
@@ -18,10 +18,10 @@ retheme_note: "v2 — primary/accent retheme blue → teal (primary) + emerald (
 
 ## Source-of-truth note
 
-`src/theme/variables.scss` is **empty** — the app uses the **Ionic 8 default palette** as-is, plus
-`dark.system.css` (auto dark mode by OS preference). Primitive values below are the published
-Ionic 8 defaults. Hardcoded values found in `home.page.scss` (`#2dd36f`, `#000`, `#fff`,
-`rgba(0,0,0,0.08)`) are **drift** — captured here as the semantic tokens they *should* map to.
+`src/theme/variables.scss` **implements this document** — all primitives + semantic tokens live
+there (`:root` = light, `.ion-palette-dark` block = dark). Dark mode is a manual class toggle via
+`theme.service.ts` + `dark.class.css` (NOT OS-media-based). variables.scss loads AFTER global.scss
+in angular.json, so its `.ion-palette-dark` overrides win the cascade over Ionic's dark palette.
 
 ---
 
@@ -143,9 +143,9 @@ Ionic 8 defaults. Hardcoded values found in `home.page.scss` (`#2dd36f`, `#000`,
 
 | Semantic | → Primitive (light) | → (dark) |
 |---|---|---|
-| `--color-surface-base` | `--color-neutral-0` | `#121212` |
-| `--color-surface-raised` | `--color-neutral-0` | `#1e1e1e` |
-| `--color-surface-sunken` | `--color-neutral-50` | `#0a0a0a` |
+| `--color-surface-base` | `--color-neutral-0` | `--color-teal-canvas-dark` (#0c100f, v2.1) |
+| `--color-surface-raised` | `--color-neutral-0` | `--color-teal-surface-dark` (#171d1b, v2.1) |
+| `--color-surface-sunken` | `--color-neutral-50` | `--color-teal-sunken-dark` (#080b0a, v2.1) |
 | `--color-surface-canvas` | `--color-neutral-1000` | `--color-neutral-1000` |
 | `--color-surface-danger` | `--color-red-100` | `#3a1416` |
 
@@ -224,3 +224,41 @@ Ionic 8 defaults. Hardcoded values found in `home.page.scss` (`#2dd36f`, `#000`,
 **Re-verified 2026-07-05** against current `src/theme/variables.scss` (post v2 retheme, `.ion-palette-dark` class-based) — all pairs above still PASS, no regression. Also checked `text-danger`/`surface-danger` in both modes (light 5.28:1, dark 5.86:1, both PASS) and `text-muted`/`surface-sunken`/`surface-raised` variants (light 5.86:1, dark 6.38:1, both PASS).
 
 **Touch target 44×44 check (2026-07-05):** grepped all `src/app/**/*.scss` for explicit sub-44px `height`/`width`/`min-height`/`min-width` on interactive elements — zero matches. Only sub-44px sized node in the codebase is a decorative, non-interactive `::before` tab-indicator bar (24×3px, `tabs.page.scss` line 24-34) — not a tap target. All real interactive elements (`ion-button`, `ion-item`, `ion-tab-button`, `ion-fab-button`) rely on unmodified Ionic defaults (≥44px). PASS.
+
+---
+
+## 4. v2.1 deepen layer (2026-07-05 — plan [[2026-07-05-2130-ui-deepen-v2_1]])
+
+Additive visual layer; palette unchanged. Cards float on a tinted canvas (`surface-app` ≠ `surface-raised`).
+
+### 4.1 New primitives
+
+| Primitive | Value | Role |
+|---|---|---|
+| `--color-teal-canvas-light` | `#f0f4f3` | page canvas, light |
+| `--color-teal-canvas-dark` | `#0c100f` | page canvas, dark |
+| `--color-teal-surface-dark` | `#171d1b` | raised surface, dark (replaces neutral `#1e1e1e`) |
+| `--color-teal-sunken-dark` | `#080b0a` | sunken surface, dark |
+| `--color-teal-border-dark` | `#242c29` | hairline border, dark |
+| `--color-teal-tint-08` | `rgba(15,118,110,.08)` | teal-700 @ 8% |
+| `--color-teal-tint-14` | `rgba(20,184,166,.14)` | teal-500 @ 14% |
+
+### 4.2 New semantic tokens
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--color-surface-app` | teal-canvas-light | teal-canvas-dark | `--ion-background-color` + `--ion-toolbar-background` |
+| `--color-surface-brand-subtle` | teal-tint-08 | teal-tint-14 | icon avatars, active tab pill, segment track, scan-assist card |
+| `--gradient-brand` | 135° teal-700→emerald-700 | 135° teal-600→emerald-600 | hero surfaces (stats hero, entry-detail hero, FAB). **White bold/large text only** |
+| `--radius-2xl` / `--radius-3xl` | 16px / 20px | same | grouped cards / hero cards |
+| `--shadow-card` | 2-layer soft (rgba(13,42,38,.05/.07)) | `none` | card elevation; dark uses `border-subtle` hairline instead |
+
+### 4.3 Global utilities (global.scss)
+
+`.ds-card` (grouped inset card), `.ds-hero` (gradient hero), `.ds-section-label` (uppercase eyebrow), `.ds-avatar` (40px tinted circle), `.ds-icon-tile` (32px tinted rounded square), `.ds-readout` (tabular-nums + tracking-readout signature).
+
+### 4.4 Contrast notes
+
+- White on `--gradient-brand` darkest stop light (teal-700 #0f766e) 4.99:1, lightest stop (emerald-700 #047857) 4.66:1 — AA for normal text, used at bold/large.
+- Dark gradient stops teal-600 #0d9488 (3.5:1) / emerald-600 #059669 — white text used ≥ large/bold only (AA large 3:1 ✓).
+- Vehicle icons: `currentColor` outline strokes → inherit context color, safe in both modes by construction.

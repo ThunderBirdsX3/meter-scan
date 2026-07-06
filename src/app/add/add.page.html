@@ -1,10 +1,14 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-title>เพิ่มการเติมน้ำมัน</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="add-content">
+<ion-content
+  [fullscreen]="true"
+  [scrollEvents]="true"
+  (ionScroll)="onScroll($event)"
+  class="add-content">
 
   <!-- Error banner — DS Component #5: role=alert + correct contrast (V1,V5 fix) -->
   <div class="error-banner" role="alert" *ngIf="error">
@@ -151,6 +155,7 @@
         <ion-select
           name="tripId"
           [(ngModel)]="draft.tripId"
+          (ionChange)="onTripChange()"
           placeholder="เลือกทริป"
           interface="action-sheet"
           aria-label="เลือกทริป">
@@ -261,24 +266,41 @@
       </ion-item>
     </div>
 
-    <!-- ── Submit ─────────────────────────────────────────────────────────── -->
+    <!-- ── Submit (inline — always in the DOM so scrollHeight stays stable while scrolling;
+         visually the natural end of the form once the user reaches the bottom; fix
+         2026-07-06-1033 step 1) ────── -->
     <div class="submit-section">
       <ion-button
         expand="block"
-        color="primary"
         type="submit"
+        class="save-btn"
         [disabled]="isSaving"
         [attr.aria-busy]="isSaving ? 'true' : null"
         aria-label="บันทึกการเติมน้ำมัน">
         <ion-spinner *ngIf="isSaving" name="crescent" aria-hidden="true"></ion-spinner>
         <span *ngIf="!isSaving">
-          <ion-icon name="checkmark-outline" slot="start" aria-hidden="true"></ion-icon>
+          <ion-icon name="save-outline" slot="start" aria-hidden="true"></ion-icon>
           บันทึก
         </span>
       </ion-button>
     </div>
 
   </form>
+
+  <!-- ── Submit (floating — shown while scrolling mid-form, before reaching the bottom; hidden via
+       CSS class (not *ngIf) once atBottom so the DOM/scrollHeight never changes; fix
+       2026-07-06-1033 step 1) ── -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" [class.is-hidden]="atBottom">
+    <ion-fab-button
+      class="save-fab"
+      (click)="save(entryForm)"
+      [disabled]="isSaving"
+      [attr.aria-busy]="isSaving ? 'true' : null"
+      aria-label="บันทึกการเติมน้ำมัน">
+      <ion-spinner *ngIf="isSaving" name="crescent" aria-hidden="true"></ion-spinner>
+      <ion-icon *ngIf="!isSaving" name="save-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 
 </ion-content>
 
